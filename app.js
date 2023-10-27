@@ -9,8 +9,7 @@ const api_url = "/api/v1/movies";
 //middleware to read json from request
 app.use(express.json());
 
-// GET - api/v1/movies
-app.get(api_url, (req, res) => {
+const getAllMovies = (req, res) => {
   res.status(200).json({
     status: "success",
     count: movies.length,
@@ -18,10 +17,9 @@ app.get(api_url, (req, res) => {
       movies: movies, // enveloping: wrap and object inside another object
     },
   });
-});
+};
 
-// GET - api/v1/movieis/id
-app.get(api_url + "/:id/:optionalParameter?", (req, res) => {
+const getOneMovie = (req, res) => {
   const id = +req.params.id; // +: unary operator
   const movie = movies.find((el) => el.id === id);
 
@@ -38,10 +36,9 @@ app.get(api_url + "/:id/:optionalParameter?", (req, res) => {
       movie: movie,
     },
   });
-});
+};
 
-// POST - api/v1/movies
-app.post(api_url, (req, res) => {
+const createMovie = (req, res) => {
   const newId = movies[movies.length - 1].id + 1;
   const newMovie = Object.assign({ id: newId }, req.body);
   movies.push(newMovie);
@@ -54,10 +51,9 @@ app.post(api_url, (req, res) => {
       },
     });
   });
-});
+};
 
-// PATCH - api/v1/movies
-app.patch(api_url + "/:id", (req, res) => {
+const patchMovie = (req, res) => {
   const id = +req.params.id;
   const movieToUppdate = movies.find((el) => el.id === id);
 
@@ -80,9 +76,9 @@ app.patch(api_url + "/:id", (req, res) => {
       },
     });
   });
-});
+};
 
-app.delete(api_url + "/:id", (req, res) => {
+const deleteMovie = (req, res) => {
   const id = +req.params.id;
   const movieToDelete = movies.find((el) => el.id === id);
 
@@ -103,7 +99,15 @@ app.delete(api_url + "/:id", (req, res) => {
       },
     });
   });
-});
+};
+
+// routes
+app.route(api_url).get(getAllMovies).post(createMovie);
+app
+  .route(api_url + "/:id")
+  .get(getOneMovie)
+  .patch(patchMovie)
+  .delete(deleteMovie);
 
 app.listen(port, () => {
   console.log("server running!");
