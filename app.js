@@ -124,5 +124,5 @@ moviesRouter
 app.use(api_url, moviesRouter);
 
 app.listen(port, () => {
-  console.log('server running!');
+  console.log('server running!!');
 });
