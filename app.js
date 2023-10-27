@@ -1,5 +1,7 @@
 const express = require("express");
 const fs = require("fs");
+const morgan = require("morgan");
+
 let app = express();
 const port = 3000;
 
@@ -7,11 +9,19 @@ const movies = JSON.parse(fs.readFileSync("./data/movies.json"));
 const api_url = "/api/v1/movies";
 
 //middleware to read json from request
-app.use(express.json());
+app.use(express.json()); // we call this function because it returns a middleware function
+app.use(morgan("dev")); // we call this function because it returns a middleware function
+// custom middleware
+const reqAtMiddleware = (req, res, next) => {
+  req.requestedAt = new Date().toISOString();
+  next();
+};
+app.use(reqAtMiddleware); // we don't call this function because it's already a middleware function
 
 const getAllMovies = (req, res) => {
   res.status(200).json({
     status: "success",
+    requestedAt: req.requestedAt,
     count: movies.length,
     data: {
       movies: movies, // enveloping: wrap and object inside another object
