@@ -46,11 +46,37 @@ app.post(api_url, (req, res) => {
   const newMovie = Object.assign({ id: newId }, req.body);
   movies.push(newMovie);
 
-  fs.writeFile("./data/movies.json", JSON.stringify(movies), () => {
+  fs.writeFile("./data/movies.json", JSON.stringify(movies), (error) => {
     res.status(201).json({
       status: "success",
       data: {
         movie: newMovie,
+      },
+    });
+  });
+});
+
+// PATCH - api/v1/movies
+app.patch(api_url + "/:id", (req, res) => {
+  const id = +req.params.id;
+  const movieToUppdate = movies.find((el) => el.id === id);
+
+  if (!movieToUppdate) {
+    return res.status(404).json({
+      status: "failed",
+      message: `movie with id: ${id} not found.`,
+    });
+  }
+
+  const indexOfMovie = movies.indexOf(movieToUppdate);
+  Object.assign(movieToUppdate, req.body);
+  movies[indexOfMovie] = movieToUppdate;
+
+  fs.writeFile("./data/movies.json", JSON.stringify(movies), (error) => {
+    res.status(200).json({
+      status: "success",
+      data: {
+        movie: movieToUppdate,
       },
     });
   });
