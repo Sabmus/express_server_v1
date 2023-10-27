@@ -82,6 +82,29 @@ app.patch(api_url + "/:id", (req, res) => {
   });
 });
 
+app.delete(api_url + "/:id", (req, res) => {
+  const id = +req.params.id;
+  const movieToDelete = movies.find((el) => el.id === id);
+
+  if (!movieToDelete) {
+    return res.status(404).json({
+      status: "failed",
+      message: `movie with id: ${id} not found.`,
+    });
+  }
+  const index = movies[movieToDelete];
+  movies.splice(index, 1);
+
+  fs.writeFile("./data/movies.json", JSON.stringify(movies), (error) => {
+    res.status(204).json({
+      status: "success",
+      data: {
+        movie: null,
+      },
+    });
+  });
+});
+
 app.listen(port, () => {
   console.log("server running!");
 });
