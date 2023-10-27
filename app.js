@@ -112,12 +112,16 @@ const deleteMovie = (req, res) => {
 };
 
 // routes
-app.route(api_url).get(getAllMovies).post(createMovie);
-app
-  .route(api_url + '/:id')
+const moviesRouter = express.Router();
+
+moviesRouter.route('/').get(getAllMovies).post(createMovie);
+moviesRouter
+  .route('/:id')
   .get(getOneMovie)
   .patch(patchMovie)
   .delete(deleteMovie);
+
+app.use(api_url, moviesRouter);
 
 app.listen(port, () => {
   console.log('server running!');
