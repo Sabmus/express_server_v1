@@ -1,16 +1,16 @@
-const express = require("express");
-const fs = require("fs");
-const morgan = require("morgan");
+const express = require('express');
+const fs = require('fs');
+const morgan = require('morgan');
 
 let app = express();
 const port = 3000;
 
-const movies = JSON.parse(fs.readFileSync("./data/movies.json"));
-const api_url = "/api/v1/movies";
+const movies = JSON.parse(fs.readFileSync('./data/movies.json'));
+const api_url = '/api/v1/movies';
 
 //middleware to read json from request
 app.use(express.json()); // we call this function because it returns a middleware function
-app.use(morgan("dev")); // we call this function because it returns a middleware function
+app.use(morgan('dev')); // we call this function because it returns a middleware function
 // custom middleware
 const reqAtMiddleware = (req, res, next) => {
   req.requestedAt = new Date().toISOString();
@@ -20,7 +20,7 @@ app.use(reqAtMiddleware); // we don't call this function because it's already a 
 
 const getAllMovies = (req, res) => {
   res.status(200).json({
-    status: "success",
+    status: 'success',
     requestedAt: req.requestedAt,
     count: movies.length,
     data: {
@@ -35,13 +35,13 @@ const getOneMovie = (req, res) => {
 
   if (!movie) {
     return res.status(404).json({
-      status: "failed",
+      status: 'failed',
       message: `movie with id: ${id} was not find`,
     });
   }
 
   res.status(200).json({
-    status: "success",
+    status: 'success',
     data: {
       movie: movie,
     },
@@ -53,9 +53,9 @@ const createMovie = (req, res) => {
   const newMovie = Object.assign({ id: newId }, req.body);
   movies.push(newMovie);
 
-  fs.writeFile("./data/movies.json", JSON.stringify(movies), (error) => {
+  fs.writeFile('./data/movies.json', JSON.stringify(movies), (error) => {
     res.status(201).json({
-      status: "success",
+      status: 'success',
       data: {
         movie: newMovie,
       },
@@ -69,7 +69,7 @@ const patchMovie = (req, res) => {
 
   if (!movieToUppdate) {
     return res.status(404).json({
-      status: "failed",
+      status: 'failed',
       message: `movie with id: ${id} not found.`,
     });
   }
@@ -78,9 +78,9 @@ const patchMovie = (req, res) => {
   Object.assign(movieToUppdate, req.body);
   movies[indexOfMovie] = movieToUppdate;
 
-  fs.writeFile("./data/movies.json", JSON.stringify(movies), (error) => {
+  fs.writeFile('./data/movies.json', JSON.stringify(movies), (error) => {
     res.status(200).json({
-      status: "success",
+      status: 'success',
       data: {
         movie: movieToUppdate,
       },
@@ -94,16 +94,16 @@ const deleteMovie = (req, res) => {
 
   if (!movieToDelete) {
     return res.status(404).json({
-      status: "failed",
+      status: 'failed',
       message: `movie with id: ${id} not found.`,
     });
   }
   const index = movies[movieToDelete];
   movies.splice(index, 1);
 
-  fs.writeFile("./data/movies.json", JSON.stringify(movies), (error) => {
+  fs.writeFile('./data/movies.json', JSON.stringify(movies), (error) => {
     res.status(204).json({
-      status: "success",
+      status: 'success',
       data: {
         movie: null,
       },
@@ -112,13 +112,17 @@ const deleteMovie = (req, res) => {
 };
 
 // routes
-app.route(api_url).get(getAllMovies).post(createMovie);
-app
-  .route(api_url + "/:id")
+const moviesRouter = express.Router();
+
+moviesRouter.route('/').get(getAllMovies).post(createMovie);
+moviesRouter
+  .route('/:id')
   .get(getOneMovie)
   .patch(patchMovie)
   .delete(deleteMovie);
 
+app.use(api_url, moviesRouter);
+
 app.listen(port, () => {
-  console.log("server running!");
+  console.log('server running!!');
 });
