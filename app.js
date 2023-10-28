@@ -8,7 +8,11 @@ const api_url = '/api/v1/movies';
 
 //middleware to read json from request
 app.use(express.json()); // we call this function because it returns a middleware function
-app.use(morgan('dev')); // we call this function because it returns a middleware function
+if (process.env.NODE_ENV === 'development') {
+  app.use(morgan('dev')); // we call this function because it returns a middleware function
+}
+app.use(express.static('./public'));
+
 // custom middleware
 const reqAtMiddleware = (req, res, next) => {
   req.requestedAt = new Date().toISOString();
