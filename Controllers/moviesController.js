@@ -14,6 +14,16 @@ const checkId = (req, res, next, value) => {
   next();
 };
 
+const validateReqBody = (req, res, next) => {
+  if (!req.body.name || !req.body.releaseYear || !req.body.duration) {
+    return res.status(400).json({
+      status: 'failed',
+      message: 'not a valid movie data',
+    });
+  }
+  next();
+};
+
 const getAllMovies = (req, res) => {
   res.status(200).json({
     status: 'success',
@@ -94,4 +104,5 @@ module.exports = {
   patchMovie,
   deleteMovie,
   checkId,
+  validateReqBody,
 };
