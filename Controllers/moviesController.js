@@ -33,16 +33,15 @@ const getAllMovies = async (req, res) => {
 
     let query = Movie.find(); // returns a query objects, if we await here we will return the result of the query
 
-    // start of sorting logic
+    // sorting
     if (req.query.sort) {
       const sortBy = req.query.sort.split(',').join(' ');
       query = query.sort(sortBy);
     } else {
       query = query.sort('-createdAt');
     }
-    // end of sorting logic
 
-    // start of limiting fields
+    // limiting fields: projection
     if (req.query.fields) {
       const byFields = req.query.fields.split(',').join(' ');
       console.log(byFields);
@@ -50,7 +49,19 @@ const getAllMovies = async (req, res) => {
     } else {
       query = query.select('-__v');
     }
-    // end of limiting fields
+
+    // pagination
+    const page = +req.query.page || 1;
+    const limit = +req.query.limit || 10;
+    const skip = (page - 1) * limit;
+    if (req.query.page) {
+      const movieCount = await Movie.countDocuments();
+      if (skip >= movieCount) {
+        throw new Error(`page ${page} was not found!`);
+      }
+    }
+
+    query = query.skip(skip).limit(limit);
 
     const movies = await query;
 
