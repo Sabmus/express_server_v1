@@ -1,11 +1,11 @@
-const { truncate } = require("fs");
-const Movie = require("../Models/movieModel");
+const { truncate } = require('fs');
+const Movie = require('../Models/movieModel');
 
 const validateReqBody = (req, res, next) => {
   if (!req.body.name || !req.body.duration) {
     return res.status(400).json({
-      status: "failed",
-      message: "not a valid movie data",
+      status: 'failed',
+      message: 'not a valid movie data',
     });
   }
   next();
@@ -13,10 +13,49 @@ const validateReqBody = (req, res, next) => {
 
 const getAllMovies = async (req, res) => {
   try {
-    const movies = await Movie.find({});
+    /**query strings */
+    /* mongoose 6.0 or lower
+    const excludeFields = ['sort', 'page', 'limit', 'fields'];
+    const queryObj = {...req.query};
+    excludeFields.forEach(el => delete queryObj[el]);
+    const movies = await Movie.find(queryObj);
+    */
+    /* mongoose 7.0 or greater
+    const movies = await Movie.find(req.query);
+    */
+
+    /* query string: ?duration[gte]=100&ratings[gt]=5
+    let queryStr = JSON.stringify(req.query);
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`)
+    const queryObj = JSON.parse(queryStr);
+    const movies = await Movie.find(queryObj);
+    */
+
+    let query = Movie.find(); // returns a query objects, if we await here we will return the result of the query
+
+    // start of sorting logic
+    if (req.query.sort) {
+      const sortBy = req.query.sort.split(',').join(' ');
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort('-createdAt');
+    }
+    // end of sorting logic
+
+    // start of limiting fields
+    if (req.query.fields) {
+      const byFields = req.query.fields.split(',').join(' ');
+      console.log(byFields);
+      query = query.select(byFields);
+    } else {
+      query = query.select('-__v');
+    }
+    // end of limiting fields
+
+    const movies = await query;
 
     res.status(200).json({
-      status: "success",
+      status: 'success',
       count: movies.length,
       data: {
         movies,
@@ -24,7 +63,7 @@ const getAllMovies = async (req, res) => {
     });
   } catch (error) {
     res.status(404).json({
-      status: "fail",
+      status: 'fail',
       message: error.message,
     });
   }
@@ -35,14 +74,14 @@ const getOneMovie = async (req, res) => {
     const movie = await Movie.findById(req.params.id);
 
     res.status(200).json({
-      status: "success",
+      status: 'success',
       data: {
         movie,
       },
     });
   } catch (error) {
     res.status(404).json({
-      status: "fail",
+      status: 'fail',
       message: error.message,
     });
   }
@@ -53,14 +92,14 @@ const createMovie = async (req, res) => {
     const movie = await Movie.create(req.body);
 
     res.status(201).json({
-      status: "success",
+      status: 'success',
       data: {
         movie,
       },
     });
   } catch (error) {
     res.status(400).json({
-      status: "fail",
+      status: 'fail',
       message: error.message,
     });
   }
@@ -73,14 +112,14 @@ const updateMovie = async (req, res) => {
       runValidators: true,
     });
     res.status(200).json({
-      status: "success",
+      status: 'success',
       data: {
         movie,
       },
     });
   } catch (error) {
     res.status(400).json({
-      status: "fail",
+      status: 'fail',
       message: error.message,
     });
   }
@@ -90,12 +129,12 @@ const deleteMovie = async (req, res) => {
   try {
     await Movie.findByIdAndDelete(req.params.id);
     res.status(204).json({
-      status: "success",
+      status: 'success',
       data: null,
     });
   } catch (error) {
     res.status(400).json({
-      status: "fail",
+      status: 'fail',
       message: error.message,
     });
   }

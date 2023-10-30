@@ -1,20 +1,20 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const movieSchema = mongoose.Schema({
   name: {
     type: String,
-    required: [true, "Name is a required field!"],
+    required: [true, 'Name is a required field!'],
     unique: true,
     trim: true,
   },
   description: {
     type: String,
-    required: [true, "Description is a required field!"],
+    required: [true, 'Description is a required field!'],
     trim: true,
   },
   duration: {
     type: Number,
-    required: [true, "Duration is a required field!"],
+    required: [true, 'Duration is a required field!'],
   },
   ratings: {
     type: Number,
@@ -25,7 +25,7 @@ const movieSchema = mongoose.Schema({
   },
   releaseYear: {
     type: Number,
-    required: [true, "Release year is a required field!"],
+    required: [true, 'Release year is a required field!'],
   },
   releaseDate: {
     type: Date,
@@ -33,29 +33,30 @@ const movieSchema = mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now(),
+    select: false, // to remove it from select querys
   },
   genres: {
     type: [String],
-    required: [true, "Genres is a required field!"],
+    required: [true, 'Genres is a required field!'],
   },
   directors: {
     type: [String],
-    required: [true, "Directors is a required field!"],
+    required: [true, 'Directors is a required field!'],
   },
   coverImage: {
     type: String,
-    required: [true, "Cover image is a required field!"],
+    required: [true, 'Cover image is a required field!'],
   },
   actors: {
     type: [String],
-    required: [true, "Actors is a required field!"],
+    required: [true, 'Actors is a required field!'],
   },
   price: {
     type: Number,
-    required: [true, "Price is a required field!"],
+    required: [true, 'Price is a required field!'],
   },
 });
 
-const Movie = mongoose.model("Movie", movieSchema);
+const Movie = mongoose.model('Movie', movieSchema);
 
 module.exports = Movie;
