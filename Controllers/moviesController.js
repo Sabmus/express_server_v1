@@ -1,5 +1,5 @@
-const { truncate } = require('fs');
 const Movie = require('../Models/movieModel');
+const ApiFeatures = require('../utils/ApiFeatures');
 
 const validateReqBody = (req, res, next) => {
   if (!req.body.name || !req.body.duration) {
@@ -8,6 +8,13 @@ const validateReqBody = (req, res, next) => {
       message: 'not a valid movie data',
     });
   }
+  next();
+};
+
+const top5highestRated = (req, res, next) => {
+  req.query.limit = '5';
+  req.query.sort = '-ratings';
+
   next();
 };
 
@@ -24,46 +31,12 @@ const getAllMovies = async (req, res) => {
     const movies = await Movie.find(req.query);
     */
 
-    /* query string: ?duration[gte]=100&ratings[gt]=5
-    let queryStr = JSON.stringify(req.query);
-    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`)
-    const queryObj = JSON.parse(queryStr);
-    const movies = await Movie.find(queryObj);
-    */
-
-    let query = Movie.find(); // returns a query objects, if we await here we will return the result of the query
-
-    // sorting
-    if (req.query.sort) {
-      const sortBy = req.query.sort.split(',').join(' ');
-      query = query.sort(sortBy);
-    } else {
-      query = query.sort('-createdAt');
-    }
-
-    // limiting fields: projection
-    if (req.query.fields) {
-      const byFields = req.query.fields.split(',').join(' ');
-      console.log(byFields);
-      query = query.select(byFields);
-    } else {
-      query = query.select('-__v');
-    }
-
-    // pagination
-    const page = +req.query.page || 1;
-    const limit = +req.query.limit || 10;
-    const skip = (page - 1) * limit;
-    if (req.query.page) {
-      const movieCount = await Movie.countDocuments();
-      if (skip >= movieCount) {
-        throw new Error(`page ${page} was not found!`);
-      }
-    }
-
-    query = query.skip(skip).limit(limit);
-
-    const movies = await query;
+    const features = new ApiFeatures(Movie.find(), req.query)
+      //.filter()
+      .sort()
+      .limitFields()
+      .paginate(); // Movie.find() return a query object
+    let movies = await features.query;
 
     res.status(200).json({
       status: 'success',
@@ -74,7 +47,7 @@ const getAllMovies = async (req, res) => {
     });
   } catch (error) {
     res.status(404).json({
-      status: 'fail',
+      status: 'failed',
       message: error.message,
     });
   }
@@ -158,4 +131,5 @@ module.exports = {
   updateMovie,
   deleteMovie,
   validateReqBody,
+  top5highestRated,
 };
