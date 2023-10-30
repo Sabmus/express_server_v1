@@ -1,22 +1,22 @@
-const mongoose = require("mongoose");
-const fs = require("fs");
-const Movie = require("../Models/movieModel");
-const dotenv = require("dotenv");
-dotenv.config({ path: "../.env" });
+const mongoose = require('mongoose');
+const fs = require('fs');
+const Movie = require('../Models/movieModel');
+const dotenv = require('dotenv');
+dotenv.config({ path: '.env' });
 
 mongoose
   .connect(process.env.CONN_STR, {
     useNewUrlParser: true,
   })
   .then((connObj) => {
-    console.log("DB connnection successful");
+    console.log('DB connnection successful');
   })
   .catch((error) => {
     console.log(error.message);
   });
 
 // read file
-const movies = JSON.parse(fs.readFileSync("./movies.json", "utf-8"));
+const movies = JSON.parse(fs.readFileSync('./data/movies.json', 'utf-8'));
 
 // delete existing docs
 const deleteAll = async () => {
@@ -28,22 +28,24 @@ const deleteAll = async () => {
   } catch (error) {
     console.log(error.message);
   }
+  process.exit();
 };
 
 // save dev data
 const importData = async () => {
   try {
     await Movie.create(movies);
-    console.log("data successfully imported");
+    console.log('data successfully imported');
   } catch (error) {
     console.log(error);
   }
+  process.exit();
 };
 
-if (process.argv[2] === "-d") {
+if (process.argv[2] === '-d') {
   deleteAll();
 }
 
-if (process.argv[2] === "-s") {
+if (process.argv[2] === '-i') {
   importData();
 }
