@@ -1,4 +1,4 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 const {
   getAllMovies,
@@ -8,10 +8,15 @@ const {
   deleteMovie,
   validateReqBody,
   top5highestRated,
-} = require('../Controllers/moviesController');
+  getMovieStats,
+  getMovieByGenre,
+} = require("../Controllers/moviesController");
 
-router.route('/hightest-rated').get(top5highestRated, getAllMovies);
-router.route('/').get(getAllMovies).post(validateReqBody, createMovie);
-router.route('/:id').get(getOneMovie).patch(updateMovie).delete(deleteMovie);
+router.route("/hightest-rated").get(top5highestRated, getAllMovies);
+router.route("/stats").get(getMovieStats);
+router.route("/movies-by-genres/:genre").get(getMovieByGenre);
+
+router.route("/").get(getAllMovies).post(validateReqBody, createMovie);
+router.route("/:id").get(getOneMovie).patch(updateMovie).delete(deleteMovie);
 
 module.exports = router;

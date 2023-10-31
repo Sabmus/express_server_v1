@@ -51,6 +51,7 @@ class ApiFeatures {
     const skip = (page - 1) * limit;
     this.query = this.query.skip(skip).limit(limit);
 
+    // check if limit of pages is reached
     /*if (this.queryStr.page) {
       const movieCount = await Movie.countDocuments();
       if (skip >= movieCount) {

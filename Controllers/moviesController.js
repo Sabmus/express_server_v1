@@ -18,6 +18,73 @@ const top5highestRated = (req, res, next) => {
   next();
 };
 
+const getMovieStats = async (req, res) => {
+  try {
+    const stats = await Movie.aggregate([
+      { $match: { ratings: { $gte: 4.5 } } },
+      {
+        $group: {
+          _id: "$releaseYear",
+          avgRating: { $avg: "$ratings" },
+          avgPrice: { $avg: "$price" },
+          minPrice: { $min: "$price" },
+          maxPrice: { $max: "$price" },
+          priceTotal: { $sum: "$price" },
+          movieCount: { $sum: 1 },
+        },
+      },
+      { $sort: { avgRating: 1 } },
+    ]);
+
+    res.status(200).json({
+      status: "success",
+      count: stats.length,
+      data: {
+        stats,
+      },
+    });
+  } catch (error) {
+    res.status(404).json({
+      status: "failed",
+      message: error.message,
+    });
+  }
+};
+
+const getMovieByGenre = async (req, res) => {
+  try {
+    const genre = req.params.genre;
+    const movies = await Movie.aggregate([
+      { $unwind: "$genres" },
+      {
+        $group: {
+          _id: "$genres",
+          movieCount: { $sum: 1 },
+          movies: { $push: "$name" },
+        },
+      },
+      { $addFields: { genre: "$_id" } },
+      { $project: { _id: 0 } },
+      { $sort: { movieCount: -1 } },
+      { $match: { genre: genre } },
+      //{ $limit: 3 },
+    ]);
+
+    res.status(200).json({
+      status: "success",
+      count: movies.length,
+      data: {
+        movies,
+      },
+    });
+  } catch (error) {
+    res.status(404).json({
+      status: "failed",
+      message: error.message,
+    });
+  }
+};
+
 const getAllMovies = async (req, res) => {
   try {
     /**query strings */
@@ -132,4 +199,6 @@ module.exports = {
   deleteMovie,
   validateReqBody,
   top5highestRated,
+  getMovieStats,
+  getMovieByGenre,
 };
