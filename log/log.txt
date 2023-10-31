@@ -1,0 +1,12 @@
+movie: Test movie 3, created by: sabmus
+movie: Test movie 4, created by: sabmus
+movie: test movie in the future, created by: sabmus
+query took 84 milisecond to complete.
+query took 111 milisecond to complete.
+query took 88 milisecond to complete.
+query took 72 milisecond to complete.
+query took 74 milisecond to complete.
+query took 81 milisecond to complete.
+movie: test movie in the future 2, created by: sabmus
+query took 103 milisecond to complete.
+query took 82 milisecond to complete.
