@@ -138,23 +138,22 @@ const getOneMovie = async (req, res) => {
   }
 };
 
-const createMovie = async (req, res) => {
-  try {
-    const movie = await Movie.create(req.body);
-
-    res.status(201).json({
-      status: "success",
-      data: {
-        movie,
-      },
-    });
-  } catch (error) {
-    res.status(400).json({
-      status: "fail",
-      message: error.message,
-    });
-  }
+const asyncErrorHandler = (func) => {
+  return (req, res, next) => {
+    func(req, res, next).catch((err) => next(err));
+  };
 };
+
+const createMovie = asyncErrorHandler(async (req, res) => {
+  const movie = await Movie.create(req.body);
+
+  res.status(201).json({
+    status: "success",
+    data: {
+      movie,
+    },
+  });
+});
 
 const updateMovie = async (req, res) => {
   try {
