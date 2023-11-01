@@ -15,3 +15,5 @@ movie: test movie in the future 3, created by: sabmus
 movie: test movie in the future 4, created by: sabmus
 movie: test movie in the future 5, created by: sabmus
 query took 75 milisecond to complete.
+query took 69 milisecond to complete.
+movie: test movie in the future 6, created by: sabmus
