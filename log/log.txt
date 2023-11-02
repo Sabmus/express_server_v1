@@ -17,3 +17,25 @@ movie: test movie in the future 5, created by: sabmus
 query took 75 milisecond to complete.
 query took 69 milisecond to complete.
 movie: test movie in the future 6, created by: sabmus
+query took 62 milisecond to complete.
+query took 63 milisecond to complete.
+query took 57 milisecond to complete.
+query took 61 milisecond to complete.
+query took 53 milisecond to complete.
+query took 62 milisecond to complete.
+query took 58 milisecond to complete.
+query took 58 milisecond to complete.
+query took 58 milisecond to complete.
+query took 63 milisecond to complete.
+query took 58 milisecond to complete.
+query took 59 milisecond to complete.
+query took 58 milisecond to complete.
+query took 66 milisecond to complete.
+query took 59 milisecond to complete.
+query took 61 milisecond to complete.
+query took 57 milisecond to complete.
+query took 57 milisecond to complete.
+query took 53 milisecond to complete.
+query took 60 milisecond to complete.
+query took 53 milisecond to complete.
+query took 53 milisecond to complete.

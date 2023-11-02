@@ -1,6 +1,7 @@
 const Movie = require('../Models/movieModel');
 const ApiFeatures = require('../utils/ApiFeatures');
 const asyncErrorHandler = require('../utils/asyncErrorHandler');
+const CustomError = require('../utils/CustomError');
 
 /* const validateReqBody = (req, res, next) => {
   if (!req.body.name || !req.body.duration) {
@@ -103,6 +104,11 @@ const getAllMovies = asyncErrorHandler(async (req, res, next) => {
 const getOneMovie = asyncErrorHandler(async (req, res, next) => {
   const movie = await Movie.findById(req.params.id);
 
+  if (!movie) {
+    const error = new CustomError(404, 'movie not found!');
+    return next(error);
+  }
+
   res.status(200).json({
     status: 'success',
     data: {
@@ -123,10 +129,16 @@ const createMovie = asyncErrorHandler(async (req, res, next) => {
 });
 
 const updateMovie = asyncErrorHandler(async (req, res, next) => {
-  const movie = await Movie.findByIdAndUpdate(req.params.id, req.body, {
+  const updatedMovie = await Movie.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
   });
+
+  if (!updatedMovie) {
+    const error = new CustomError(404, 'movie not found!');
+    return next(error);
+  }
+
   res.status(200).json({
     status: 'success',
     data: {
@@ -136,7 +148,13 @@ const updateMovie = asyncErrorHandler(async (req, res, next) => {
 });
 
 const deleteMovie = asyncErrorHandler(async (req, res, next) => {
-  await Movie.findByIdAndDelete(req.params.id);
+  const deletedMovie = await Movie.findByIdAndDelete(req.params.id);
+
+  if (!deletedMovie) {
+    const error = new CustomError(404, 'movie not found!');
+    return next(error);
+  }
+
   res.status(204).json({
     status: 'success',
     data: null,
