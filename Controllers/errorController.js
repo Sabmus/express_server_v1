@@ -33,6 +33,11 @@ const duplicateKeyErrorHandler = (error) => {
   return new CustomError(400, message);
 };
 
+const validationErrorHandler = (error) => {
+  const message = `error - ${error.message}`;
+  return new CustomError(400, message);
+};
+
 module.exports = (error, req, res, next) => {
   error.statusCode = error.statusCode || 500;
   error.status = error.status || 'error';
