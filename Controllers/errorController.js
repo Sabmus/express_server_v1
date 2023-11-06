@@ -34,7 +34,11 @@ const duplicateKeyErrorHandler = (error) => {
 };
 
 const validationErrorHandler = (error) => {
-  const message = `error - ${error.message}`;
+  const errorMessages = Object.values(error.errors)
+    .map((val) => val.message)
+    .join('. ');
+
+  const message = `errors: ${errorMessages}`;
   return new CustomError(400, message);
 };
 
