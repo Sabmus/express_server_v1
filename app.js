@@ -1,19 +1,21 @@
-const express = require("express");
-const morgan = require("morgan");
-const moviesRouter = require("./Routes/moviesRoutes");
-const globalErrorHandler = require("./Controllers/errorController");
-const CustomError = require("./utils/CustomError");
+const express = require('express');
+const morgan = require('morgan');
+const moviesRouter = require('./Routes/moviesRoutes');
+const authRouter = require('./Routes/authRoutes');
+const globalErrorHandler = require('./Controllers/errorController');
+const CustomError = require('./utils/CustomError');
 
 let app = express();
 
-const api_url = "/api/v1/movies";
+const movie_api = '/api/v1/movies';
+const user_api = '/api/v1/users';
 
 //middleware to read json from request
 app.use(express.json()); // we call this function because it returns a middleware function
-if (process.env.NODE_ENV === "development") {
-  app.use(morgan("dev")); // we call this function because it returns a middleware function
+if (process.env.NODE_ENV === 'development') {
+  app.use(morgan('dev')); // we call this function because it returns a middleware function
 }
-app.use(express.static("./public"));
+app.use(express.static('./public'));
 
 // custom middleware
 const reqAtMiddleware = (req, res, next) => {
@@ -23,10 +25,11 @@ const reqAtMiddleware = (req, res, next) => {
 app.use(reqAtMiddleware); // we don't call this function because it's already a middleware function
 
 // routes
-app.use(api_url, moviesRouter);
+app.use(movie_api, moviesRouter);
+app.use(user_api, authRouter);
 
 // default route
-app.all("*", (req, res, next) => {
+app.all('*', (req, res, next) => {
   /* res.status(404).json({
     status: "fail",
     message: `can't find ${req.originalUrl} on the server`,

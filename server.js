@@ -4,6 +4,7 @@ dotenv.config({ path: '.env' });
 
 process.on('uncaughtException', (err) => {
   console.log(err.name, err.message);
+  console.log(err.stack);
   console.log('uncaught exception occurred, shutting down the server...');
 
   process.exit(1); //uncaught exception
