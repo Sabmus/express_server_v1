@@ -2,6 +2,13 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 dotenv.config({ path: '.env' });
 
+process.on('uncaughtException', (err) => {
+  console.log(err.name, err.message);
+  console.log('uncaught exception occurred, shutting down the server...');
+
+  process.exit(1); //uncaught exception
+});
+
 const app = require('./app');
 console.log(`currently in: ${app.get('env')} environment`);
 
@@ -21,7 +28,7 @@ const server = app.listen(port, () => {
 
 process.on('unhandledRejection', (err) => {
   console.log(err.name, err.message);
-  console.log('unhandled rejection occur, shutting down the server...');
+  console.log('unhandled rejection occurred , shutting down the server...');
 
   server.close(() => {
     process.exit(1); //uncaught exception
