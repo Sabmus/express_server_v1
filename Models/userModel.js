@@ -19,10 +19,12 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, "password is a required field."],
     minlength: 8,
+    select: false,
   },
   confirmPassword: {
     type: String,
     required: [true, "confirm password is a required field."],
+    select: false,
     validate: {
       // this validate will work only with save() and create()
       validator: function (val) {
