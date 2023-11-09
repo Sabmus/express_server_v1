@@ -1,29 +1,29 @@
-const mongoose = require("mongoose");
-const fs = require("fs");
+const mongoose = require('mongoose');
+const fs = require('fs');
 
 const movieSchema = mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, "Name is a required field!"],
+      required: [true, 'Name is a required field!'],
       unique: true,
-      maxlength: [100, "movie name must not exceed 100 characters"],
-      minlength: [4, "movie name must al least have 4 characters"],
+      maxlength: [100, 'movie name must not exceed 100 characters'],
+      minlength: [4, 'movie name must al least have 4 characters'],
       trim: true,
     },
     description: {
       type: String,
-      required: [true, "Description is a required field!"],
+      required: [true, 'Description is a required field!'],
       trim: true,
     },
     duration: {
       type: Number,
-      required: [true, "Duration is a required field!"],
+      required: [true, 'Duration is a required field!'],
     },
     ratings: {
       type: Number,
       default: 1.0,
-      min: [1, "ratings must be greater or equals to 1"],
+      min: [1, 'ratings must be greater or equals to 1'],
       max: [10, "ratings can't be greater than 10"],
     },
     totalRatings: {
@@ -31,7 +31,7 @@ const movieSchema = mongoose.Schema(
     },
     releaseYear: {
       type: Number,
-      required: [true, "Release year is a required field!"],
+      required: [true, 'Release year is a required field!'],
       validate: {
         validator: function (value) {
           return value >= 1700;
@@ -49,37 +49,37 @@ const movieSchema = mongoose.Schema(
     },
     genres: {
       type: [String],
-      required: [true, "Genres is a required field!"],
+      required: [true, 'Genres is a required field!'],
       enum: {
         values: [
-          "Action",
-          "Adventure",
-          "Sci-Fi",
-          "Thriller",
-          "Crime",
-          "Drama",
-          "Comedy",
-          "Romance",
-          "Biography",
+          'Action',
+          'Adventure',
+          'Sci-Fi',
+          'Thriller',
+          'Crime',
+          'Drama',
+          'Comedy',
+          'Romance',
+          'Biography',
         ],
         message: "this genre doesn't exists",
       },
     },
     directors: {
       type: [String],
-      required: [true, "Directors is a required field!"],
+      required: [true, 'Directors is a required field!'],
     },
     coverImage: {
       type: String,
-      required: [true, "Cover image is a required field!"],
+      required: [true, 'Cover image is a required field!'],
     },
     actors: {
       type: [String],
-      required: [true, "Actors is a required field!"],
+      required: [true, 'Actors is a required field!'],
     },
     price: {
       type: Number,
-      required: [true, "Price is a required field!"],
+      required: [true, 'Price is a required field!'],
     },
     createdBy: String,
   },
@@ -94,13 +94,13 @@ const movieSchema = mongoose.Schema(
 );
 
 // virtual properties
-movieSchema.virtual("durationInHours").get(function () {
+movieSchema.virtual('durationInHours').get(function () {
   return this.duration / 60;
 });
 
 // pre hook
-movieSchema.pre("save", function (next) {
-  this.createdBy = "sabmus";
+movieSchema.pre('save', function (next) {
+  this.createdBy = 'sabmus';
   next();
 });
 
@@ -110,21 +110,21 @@ movieSchema.pre(/^find/, function (next) {
   next();
 });
 
-movieSchema.pre("aggregate", function (next) {
+movieSchema.pre('aggregate', function (next) {
   this.pipeline().unshift({ $match: { releaseDate: { $lte: new Date() } } });
   next();
 });
 
 // post hook
-movieSchema.post("save", function (doc, next) {
-  const content = `movie: ${doc.name}, created by: ${doc.createdBy}\n`;
-  fs.writeFile("./log/log.txt", content, { flag: "a" }, (error) => {
+movieSchema.post('save', function (doc, next) {
+  /* const content = `movie: ${doc.name}, created by: ${doc.createdBy}\n`;
+  fs.writeFile('./log/log.txt', content, { flag: 'a' }, (error) => {
     if (error) {
       console.log(error);
     } else {
-      console.log("log created by success");
+      console.log('log created by success');
     }
-  });
+  }); */
   next();
 });
 
@@ -135,17 +135,17 @@ movieSchema.post(/^find/, function (docs, next) {
     this.endTime - this.startTime
   } milisecond to complete.\n`;
 
-  fs.writeFile("./log/log.txt", content, { flag: "a" }, (error) => {
+  /* fs.writeFile("./log/log.txt", content, { flag: "a" }, (error) => {
     if (error) {
       console.log(error);
     } else {
       console.log("log time success");
     }
-  });
+  }); */
 
   next();
 });
 
-const Movie = mongoose.model("Movie", movieSchema);
+const Movie = mongoose.model('Movie', movieSchema);
 
 module.exports = Movie;
