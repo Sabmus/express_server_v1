@@ -1,24 +1,26 @@
 const express = require('express');
 const router = express.Router();
-const {
-  getAllMovies,
-  getOneMovie,
-  createMovie,
-  updateMovie,
-  deleteMovie,
-  //validateReqBody,
-  top5highestRated,
-  getMovieStats,
-  getMovieByGenre,
-} = require('../Controllers/moviesController');
+const movieController = require('../Controllers/moviesController');
+const userController = require('../Controllers/usersController');
 
-const { protect } = require('../Controllers/usersController');
+router
+  .route('/hightest-rated')
+  .get(movieController.top5highestRated, movieController.getAllMovies);
+router.route('/stats').get(movieController.getMovieStats);
+router.route('/movies-by-genres/:genre').get(movieController.getMovieByGenre);
 
-router.route('/hightest-rated').get(top5highestRated, getAllMovies);
-router.route('/stats').get(getMovieStats);
-router.route('/movies-by-genres/:genre').get(getMovieByGenre);
-
-router.route('/').get(protect, getAllMovies).post(createMovie);
-router.route('/:id').get(getOneMovie).patch(updateMovie).delete(deleteMovie);
+router
+  .route('/')
+  .get(userController.protect, movieController.getAllMovies)
+  .post(movieController.createMovie);
+router
+  .route('/:id')
+  .get(movieController.getOneMovie)
+  .patch(movieController.updateMovie)
+  .delete(
+    userController.protect,
+    userController.onlyAdmin('admin'),
+    movieController.deleteMovie
+  );
 
 module.exports = router;
