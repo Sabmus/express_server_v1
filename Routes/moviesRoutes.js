@@ -12,11 +12,13 @@ const {
   getMovieByGenre,
 } = require('../Controllers/moviesController');
 
+const { protect } = require('../Controllers/usersController');
+
 router.route('/hightest-rated').get(top5highestRated, getAllMovies);
 router.route('/stats').get(getMovieStats);
 router.route('/movies-by-genres/:genre').get(getMovieByGenre);
 
-router.route('/').get(getAllMovies).post(createMovie);
+router.route('/').get(protect, getAllMovies).post(createMovie);
 router.route('/:id').get(getOneMovie).patch(updateMovie).delete(deleteMovie);
 
 module.exports = router;
