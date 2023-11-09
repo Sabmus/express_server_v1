@@ -49,3 +49,4 @@ query took 73 milisecond to complete.
 query took 69 milisecond to complete.
 query took 66 milisecond to complete.
 query took 61 milisecond to complete.
+query took 57 milisecond to complete.
