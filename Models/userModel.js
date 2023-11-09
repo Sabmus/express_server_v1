@@ -2,6 +2,9 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const { hashPassword } = require('../utils/hash');
 
+const adminRole = 'admin';
+const userRole = 'user';
+
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -17,8 +20,8 @@ const userSchema = new mongoose.Schema({
   photo: String,
   role: {
     type: String,
-    enum: ['user', 'admin'],
-    default: 'user',
+    enum: [userRole, adminRole],
+    default: userRole,
   },
   password: {
     type: String,
@@ -64,6 +67,10 @@ userSchema.methods.isPasswordChanged = async function (JWTTimestamp) {
   }
 
   return false;
+};
+
+userSchema.methods.isAdmin = function () {
+  return this.role === adminRole;
 };
 
 const User = mongoose.model('User', userSchema);
