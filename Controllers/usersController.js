@@ -63,7 +63,7 @@ const protect = asyncErrorHandler(async (req, res, next) => {
   // 1. read the token and check if exists
   const testToken = req.headers.authorization;
 
-  if (!(testToken && testToken.startsWith('bearer'))) {
+  if (!(testToken && testToken.startsWith('Bearer'))) {
     const error = new CustomError(401, 'you must log in to see this.');
     return next(error);
   }
