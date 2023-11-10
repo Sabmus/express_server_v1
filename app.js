@@ -4,11 +4,9 @@ const moviesRouter = require('./Routes/moviesRoutes');
 const authRouter = require('./Routes/authRoutes');
 const globalErrorHandler = require('./Controllers/errorController');
 const CustomError = require('./utils/CustomError');
+const constants = require('./utils/constants');
 
 let app = express();
-
-const movie_api = '/api/v1/movies';
-const user_api = '/api/v1/users';
 
 //middleware to read json from request
 app.use(express.json()); // we call this function because it returns a middleware function
@@ -25,8 +23,8 @@ const reqAtMiddleware = (req, res, next) => {
 app.use(reqAtMiddleware); // we don't call this function because it's already a middleware function
 
 // routes
-app.use(movie_api, moviesRouter);
-app.use(user_api, authRouter);
+app.use(constants.movie_api, moviesRouter);
+app.use(constants.user_api, authRouter);
 
 // default route
 app.all('*', (req, res, next) => {
