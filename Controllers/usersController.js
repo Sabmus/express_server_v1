@@ -6,6 +6,7 @@ const { checkPassword } = require('../utils/hash');
 const util = require('util');
 const sendEmail = require('../utils/email');
 const constants = require('../utils/constants');
+const crypto = require('crypto');
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -152,7 +153,49 @@ const forgotPassword = async (req, res, next) => {
   });
 };
 
-const resetPassword = (req, res, next) => {};
+const resetPassword = async (req, res, next) => {
+  const token = crypto
+    .createHash('sha256')
+    .update(req.params.token)
+    .digest('hex');
+
+  // check that password and password confirm are present in request body
+  if (!req.body.password || !req.body.confirmPassword) {
+    const error = new CustomError(
+      400,
+      'password and password confirm are required fields.'
+    );
+    return next(error);
+  }
+
+  const user = await User.findOne({
+    passwordResetToken: token,
+    passwordResetTokenExpires: { $gte: Date.now() },
+  });
+
+  //check if user exsits
+  if (!user) {
+    const error = new CustomError(400, 'Invalid token or expired.');
+    return next(error);
+  }
+
+  // save password to db (it will be hashed pre save)
+  user.password = req.body.password;
+  user.confirmPassword = req.body.confirmPassword;
+  user.passwordResetToken = undefined;
+  user.passwordResetTokenExpires = undefined;
+  user.passwordChangedAt = Date.now();
+
+  user.save();
+
+  // log the user in
+  const jwtToken = signToken(user._id);
+
+  res.status(200).json({
+    status: 'success',
+    token: jwtToken,
+  });
+};
 
 module.exports = {
   signup,
