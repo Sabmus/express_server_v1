@@ -4,6 +4,8 @@ const jwt = require('jsonwebtoken');
 const CustomError = require('../utils/CustomError');
 const { checkPassword } = require('../utils/hash');
 const util = require('util');
+const sendEmail = require('../utils/email');
+const constants = require('../utils/constants');
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -95,11 +97,68 @@ const protect = asyncErrorHandler(async (req, res, next) => {
   }
 
   // 5. allow user to access
+  req.user = user;
   next();
 });
+
+const onlyAdmin = (role) => {
+  return (req, res, next) => {
+    if (req.user.role !== role) {
+      const error = new CustomError(403, 'you do not have access.');
+      return next(error);
+    }
+
+    next();
+  };
+};
+
+const forgotPassword = async (req, res, next) => {
+  const user = await User.findOne({ email: req.body.email });
+
+  if (user) {
+    const resetToken = user.createResetPasswordToken();
+    await user.save({ validateBeforeSave: false });
+
+    const resetUrl = `${req.protocol}://${req.get('host')}/${
+      constants.user_api
+    }/reset-password/${resetToken}`;
+
+    const message = `please use the link below to reset your password\n\n${resetUrl}\n\nThis link will be valid for 10 minutes.`;
+
+    try {
+      await sendEmail({
+        email: user.email,
+        subject: 'password reset',
+        message,
+      });
+    } catch (error) {
+      user.passwordResetToken = undefined;
+      user.passwordResetTokenExpires = undefined;
+      user.save({ validateBeforeSave: false });
+
+      return next(
+        new CustomError(
+          500,
+          'there was a problem sending the password reset email'
+        )
+      );
+    }
+  }
+
+  res.status(200).json({
+    status: 'success',
+    message:
+      'if the email exists in the system, it will receive a reset password link.',
+  });
+};
+
+const resetPassword = (req, res, next) => {};
 
 module.exports = {
   signup,
   login,
   protect,
+  onlyAdmin,
+  forgotPassword,
+  resetPassword,
 };
