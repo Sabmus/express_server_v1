@@ -9,8 +9,11 @@ const userRole = "user";
 
 class User extends Model {
   async validatePassword(password) {
+    console.log(password, this.password);
     return await checkPassword(password, this.password);
   }
+
+  isPasswordChanged() {}
 }
 User.init(
   {

@@ -2,7 +2,6 @@ const User = require("../Models/userModel");
 const asyncErrorHandler = require("../utils/asyncErrorHandler");
 const jwt = require("jsonwebtoken");
 const CustomError = require("../utils/CustomError");
-const { checkPassword } = require("../utils/hash");
 const util = require("util");
 const sendEmail = require("../utils/email");
 const constants = require("../utils/constants");
@@ -15,7 +14,6 @@ const signToken = (id) => {
 };
 
 const signup = asyncErrorHandler(async (req, res, next) => {
-  console.log(req.body);
   const newUser = await User.create(req.body);
   const token = signToken(newUser.email);
 
@@ -38,7 +36,7 @@ const login = asyncErrorHandler(async (req, res, next) => {
   }
 
   //check if user exists in db
-  const user = await User.findOne({ email }).select("+password");
+  const user = await User.findOne({ where: { email: email } });
 
   if (!user) {
     const error = new CustomError(400, "invalid email or password");
@@ -46,14 +44,14 @@ const login = asyncErrorHandler(async (req, res, next) => {
   }
 
   //check if password is correct
-  const correctPassword = await checkPassword(password, user.password);
+  const correctPassword = await user.validatePassword(password);
 
   if (!correctPassword) {
     const error = new CustomError(400, "invalid email or password");
     return next(error);
   }
 
-  const token = signToken(user._id);
+  const token = signToken(user.email);
 
   res.status(200).json({
     status: "success",
@@ -78,7 +76,7 @@ const protect = asyncErrorHandler(async (req, res, next) => {
   const payload = await util.promisify(jwt.verify)(token, process.env.JWT_SECRET);
 
   // 3. check if user exists
-  const user = await User.findById(payload.id);
+  const user = await User.findOne({ where: { email: payload.id } });
 
   if (!user) {
     const error = new CustomError(401, "you must log in to see this.");
