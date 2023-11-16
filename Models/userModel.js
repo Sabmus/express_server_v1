@@ -38,6 +38,10 @@ User.init(
         notEmpty: true,
       },
     },
+    passwordChangedAt: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+    },
     name: DataTypes.STRING,
     lastName: DataTypes.STRING,
     role: {
@@ -50,6 +54,12 @@ User.init(
     hooks: {
       beforeCreate: async (user) => {
         user.password = await hashPassword(user.password);
+      },
+      beforeUpdate: (user) => {
+        console.log(user);
+        if (user.password) {
+          user.passwordChangedAt = DataTypes.NOW;
+        }
       },
     },
     sequelize,
