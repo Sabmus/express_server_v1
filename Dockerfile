@@ -20,4 +20,4 @@ RUN npm rebuild bcrypt
 # Bundle app source
 COPY ./ ./
 
-CMD [ "npm", "run", "dev" ]
+CMD [ "npm", "run", "dev-docker" ]

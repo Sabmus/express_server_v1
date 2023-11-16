@@ -7,6 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
     "dev": "nodemon server.js",
+    "dev-docker": "nodemon --legacy-watch server.js",
     "delete-test-data": "node ./data/import_dev_data.js -d",
     "import-test-data": "node ./data/import_dev_data.js -i"
   },
