@@ -1,13 +1,17 @@
 const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../utils/dbConn");
-const validator = require("validator");
-const { hashPassword } = require("../utils/hash");
-const crypto = require("crypto");
+const { hashPassword, checkPassword } = require("../utils/hash");
+//const validator = require("validator");
+//const crypto = require("crypto");
 
 const adminRole = "admin";
 const userRole = "user";
 
-class User extends Model {}
+class User extends Model {
+  async validatePassword(password) {
+    return await checkPassword(password, this.password);
+  }
+}
 User.init(
   {
     id: {
@@ -27,6 +31,9 @@ User.init(
     password: {
       type: DataTypes.STRING,
       allowNull: false,
+      validate: {
+        notEmpty: true,
+      },
     },
     name: DataTypes.STRING,
     lastName: DataTypes.STRING,
@@ -37,6 +44,11 @@ User.init(
     },
   },
   {
+    hooks: {
+      beforeCreate: async (user) => {
+        user.password = await hashPassword(user.password);
+      },
+    },
     sequelize,
     modelName: "User",
   }
