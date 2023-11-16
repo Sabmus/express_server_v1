@@ -17,7 +17,7 @@ console.log(`currently in: ${app.get("env")} environment`);
 const startDB = async () => {
   try {
     await sequelize.authenticate();
-    await User.sync({ force: true });
+    await User.sync();
     console.log("\n\nConnection has been established successfully.\n\n");
   } catch (error) {
     console.log("\n\nUnable to connect to the database: ", error.message);
