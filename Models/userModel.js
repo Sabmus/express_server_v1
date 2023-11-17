@@ -56,7 +56,7 @@ User.init(
     },
     name: DataTypes.STRING,
     lastName: DataTypes.STRING,
-    role: {
+    /* role: {
       type: DataTypes.INTEGER,
       references: {
         model: Role,
@@ -64,7 +64,7 @@ User.init(
         deferrable: Deferrable.INITIALLY_IMMEDIATE,
       },
       defaultValue: 1,
-    },
+    }, */
     passwordResetToken: {
       type: DataTypes.STRING,
       allowNull: true,
@@ -95,8 +95,8 @@ User.init(
 );
 
 // associations
-//User.belongsTo(Role, {foreignKey});
-//Role.hasMany(User);
+Role.hasMany(User, { foreignKey: "role", defaultValue });
+User.belongsTo(Role, { foreignKey: "role" });
 
 // exports
 module.exports = User;
