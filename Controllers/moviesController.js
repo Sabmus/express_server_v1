@@ -1,7 +1,7 @@
-const Movie = require('../Models/movieModel');
-const ApiFeatures = require('../utils/ApiFeatures');
-const asyncErrorHandler = require('../utils/asyncErrorHandler');
-const CustomError = require('../utils/CustomError');
+const Movie = require("../Models/movieModel");
+const ApiFeatures = require("../utils/ApiFeatures");
+const asyncErrorHandler = require("../utils/asyncErrorHandler");
+const CustomError = require("../utils/CustomError");
 
 /* const validateReqBody = (req, res, next) => {
   if (!req.body.name || !req.body.duration) {
@@ -14,8 +14,8 @@ const CustomError = require('../utils/CustomError');
 }; */
 
 const top5highestRated = (req, res, next) => {
-  req.query.limit = '5';
-  req.query.sort = '-ratings';
+  req.query.limit = "5";
+  req.query.sort = "-ratings";
 
   next();
 };
@@ -25,12 +25,12 @@ const getMovieStats = asyncErrorHandler(async (req, res, next) => {
     { $match: { ratings: { $gte: 4.5 } } },
     {
       $group: {
-        _id: '$releaseYear',
-        avgRating: { $avg: '$ratings' },
-        avgPrice: { $avg: '$price' },
-        minPrice: { $min: '$price' },
-        maxPrice: { $max: '$price' },
-        priceTotal: { $sum: '$price' },
+        _id: "$releaseYear",
+        avgRating: { $avg: "$ratings" },
+        avgPrice: { $avg: "$price" },
+        minPrice: { $min: "$price" },
+        maxPrice: { $max: "$price" },
+        priceTotal: { $sum: "$price" },
         movieCount: { $sum: 1 },
       },
     },
@@ -38,7 +38,7 @@ const getMovieStats = asyncErrorHandler(async (req, res, next) => {
   ]);
 
   res.status(200).json({
-    status: 'success',
+    status: "success",
     count: stats.length,
     data: {
       stats,
@@ -49,15 +49,15 @@ const getMovieStats = asyncErrorHandler(async (req, res, next) => {
 const getMovieByGenre = asyncErrorHandler(async (req, res, next) => {
   const genre = req.params.genre;
   const movies = await Movie.aggregate([
-    { $unwind: '$genres' },
+    { $unwind: "$genres" },
     {
       $group: {
-        _id: '$genres',
+        _id: "$genres",
         movieCount: { $sum: 1 },
-        movies: { $push: '$name' },
+        movies: { $push: "$name" },
       },
     },
-    { $addFields: { genre: '$_id' } },
+    { $addFields: { genre: "$_id" } },
     { $project: { _id: 0 } },
     { $sort: { movieCount: -1 } },
     { $match: { genre: genre } },
@@ -65,7 +65,7 @@ const getMovieByGenre = asyncErrorHandler(async (req, res, next) => {
   ]);
 
   res.status(200).json({
-    status: 'success',
+    status: "success",
     count: movies.length,
     data: {
       movies,
@@ -74,30 +74,10 @@ const getMovieByGenre = asyncErrorHandler(async (req, res, next) => {
 });
 
 const getAllMovies = asyncErrorHandler(async (req, res, next) => {
-  /**query strings */
-  /* mongoose 6.0 or lower
-    const excludeFields = ['sort', 'page', 'limit', 'fields'];
-    const queryObj = {...req.query};
-    excludeFields.forEach(el => delete queryObj[el]);
-    const movies = await Movie.find(queryObj);
-    */
-  /* mongoose 7.0 or greater
-    const movies = await Movie.find(req.query);
-    */
-
-  const features = new ApiFeatures(Movie.find(), req.query)
-    .filter()
-    .sort()
-    .limitFields()
-    .paginate(); // Movie.find() return a query object
-  let movies = await features.query;
-
   res.status(200).json({
-    status: 'success',
-    count: movies.length,
-    data: {
-      movies,
-    },
+    status: "success",
+    count: 1,
+    data: {},
   });
 });
 
@@ -105,12 +85,12 @@ const getOneMovie = asyncErrorHandler(async (req, res, next) => {
   const movie = await Movie.findById(req.params.id);
 
   if (!movie) {
-    const error = new CustomError(404, 'movie not found!');
+    const error = new CustomError(404, "movie not found!");
     return next(error);
   }
 
   res.status(200).json({
-    status: 'success',
+    status: "success",
     data: {
       movie,
     },
@@ -121,7 +101,7 @@ const createMovie = asyncErrorHandler(async (req, res, next) => {
   const movie = await Movie.create(req.body);
 
   res.status(201).json({
-    status: 'success',
+    status: "success",
     data: {
       movie,
     },
@@ -135,12 +115,12 @@ const updateMovie = asyncErrorHandler(async (req, res, next) => {
   });
 
   if (!updatedMovie) {
-    const error = new CustomError(404, 'movie not found!');
+    const error = new CustomError(404, "movie not found!");
     return next(error);
   }
 
   res.status(200).json({
-    status: 'success',
+    status: "success",
     data: {
       movie,
     },
@@ -148,15 +128,8 @@ const updateMovie = asyncErrorHandler(async (req, res, next) => {
 });
 
 const deleteMovie = asyncErrorHandler(async (req, res, next) => {
-  const deletedMovie = await Movie.findByIdAndDelete(req.params.id);
-
-  if (!deletedMovie) {
-    const error = new CustomError(404, 'movie not found!');
-    return next(error);
-  }
-
   res.status(204).json({
-    status: 'success',
+    status: "success",
     data: null,
   });
 });
