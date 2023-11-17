@@ -1,4 +1,4 @@
-const nodemailer = require('nodemailer');
+const nodemailer = require("nodemailer");
 
 const sendEmail = async (option) => {
   // crete a transporter (the service that will send the email)
@@ -13,7 +13,7 @@ const sendEmail = async (option) => {
 
   // define email options
   const emailOptions = {
-    from: 'Sabmus Support <hello@sabmus.com>',
+    from: "Sabmus Support <hello@sabmus.com>",
     to: option.email,
     subject: option.subject,
     text: option.message,

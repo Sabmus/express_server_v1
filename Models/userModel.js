@@ -1,8 +1,8 @@
 const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../utils/dbConn");
 const { hashPassword, checkPassword } = require("../utils/hash");
+const crypto = require("crypto");
 //const validator = require("validator");
-//const crypto = require("crypto");
 
 const adminRole = "admin";
 const userRole = "user";
@@ -13,7 +13,14 @@ class User extends Model {
     return await checkPassword(password, this.password);
   }
 
-  isPasswordChanged() {}
+  isPasswordChanged(iat) {
+    return this.passwordChangedAt > iat;
+  }
+
+  createResetPasswordToken() {
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    return resetToken;
+  }
 }
 User.init(
   {
@@ -49,16 +56,28 @@ User.init(
       values: [adminRole, userRole],
       defaultValue: userRole,
     },
+    passwordResetToken: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      defaultValue: null,
+    },
+    passwordResetTokenExpires: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: null,
+    },
   },
   {
     hooks: {
       beforeCreate: async (user) => {
         user.password = await hashPassword(user.password);
       },
-      beforeUpdate: (user) => {
-        console.log(user);
-        if (user.password) {
-          user.passwordChangedAt = DataTypes.NOW;
+      beforeUpdate: async (user) => {
+        if (user.changed("password")) {
+          user.password = await hashPassword(user.password);
+          user.passwordChangedAt = Date.now();
+          user.passwordResetToken = null;
+          user.passwordResetTokenExpires = null;
         }
       },
     },

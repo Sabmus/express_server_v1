@@ -1,3 +1,4 @@
+const { Op } = require("sequelize");
 const User = require("../Models/userModel");
 const asyncErrorHandler = require("../utils/asyncErrorHandler");
 const jwt = require("jsonwebtoken");
@@ -84,7 +85,7 @@ const protect = asyncErrorHandler(async (req, res, next) => {
   }
 
   // 4. check if user changed password after the token was issued
-  const isPasswordChanged = await user.isPasswordChanged(payload.iat);
+  const isPasswordChanged = user.isPasswordChanged(payload.iat);
   if (isPasswordChanged) {
     const error = new CustomError(401, "password changed, please log in again.");
     return next(error);
@@ -107,11 +108,15 @@ const onlyAdmin = (role) => {
 };
 
 const forgotPassword = async (req, res, next) => {
-  const user = await User.findOne({ email: req.body.email });
+  const user = await User.findOne({ where: { email: req.body.email } });
 
   if (user) {
     const resetToken = user.createResetPasswordToken();
-    await user.save({ validateBeforeSave: false });
+    const passwordResetToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+
+    user.passwordResetToken = passwordResetToken;
+    user.passwordResetTokenExpires = Date.now() + 10 * 60 * 1000;
+    await user.save();
 
     const resetUrl = `${req.protocol}://${req.get("host")}/${constants.user_api}/reset-password/${resetToken}`;
 
@@ -124,10 +129,7 @@ const forgotPassword = async (req, res, next) => {
         message,
       });
     } catch (error) {
-      user.passwordResetToken = undefined;
-      user.passwordResetTokenExpires = undefined;
-      user.save({ validateBeforeSave: false });
-
+      await user.update({ passwordResetToken: null, passwordResetTokenExpires: null });
       return next(new CustomError(500, "there was a problem sending the password reset email"));
     }
   }
@@ -148,8 +150,10 @@ const resetPassword = async (req, res, next) => {
   }
 
   const user = await User.findOne({
-    passwordResetToken: token,
-    passwordResetTokenExpires: { $gte: Date.now() },
+    where: {
+      passwordResetToken: token,
+      passwordResetTokenExpires: { [Op.gte]: Date.now() },
+    },
   });
 
   //check if user exsits
@@ -160,12 +164,7 @@ const resetPassword = async (req, res, next) => {
 
   // save password to db (it will be hashed pre save)
   user.password = req.body.password;
-  user.confirmPassword = req.body.confirmPassword;
-  user.passwordResetToken = undefined;
-  user.passwordResetTokenExpires = undefined;
-  user.passwordChangedAt = Date.now();
-
-  user.save();
+  await user.save();
 
   // log the user in
   const jwtToken = signToken(user._id);
