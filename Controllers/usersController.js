@@ -92,7 +92,7 @@ const protect = asyncErrorHandler(async (req, res, next) => {
   }
 
   // 5. allow user to access
-  req.user = user;
+  req.user = user.toJSON();
   next();
 });
 

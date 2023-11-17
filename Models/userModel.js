@@ -2,6 +2,7 @@ const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../utils/dbConn");
 const { hashPassword, checkPassword } = require("../utils/hash");
 const crypto = require("crypto");
+const { log } = require("console");
 //const validator = require("validator");
 
 const adminRole = "admin";
@@ -13,8 +14,12 @@ class User extends Model {
     return await checkPassword(password, this.password);
   }
 
-  isPasswordChanged(iat) {
-    return this.passwordChangedAt > iat;
+  isPasswordChanged(jwtIAT) {
+    if (this.passwordChangedAt) {
+      const passwordChangedAtMs = parseInt(this.passwordChangedAt.getTime() / 1000, 10);
+      return passwordChangedAtMs > jwtIAT;
+    }
+    return false;
   }
 
   createResetPasswordToken() {
