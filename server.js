@@ -28,6 +28,7 @@ const port = process.env.PORT || 3000;
 
 const server = app.listen(port, async () => {
   await startDB();
+  console.log(process.env.TZ);
   console.log("server running!!");
 });
 

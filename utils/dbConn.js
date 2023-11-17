@@ -9,6 +9,10 @@ const sequelize = new Sequelize({
   host: process.env.POSTGRES_HOST,
   port: process.env.POSTGRES_PORT,
   database: process.env.POSTGRES_DB,
+  /* dialectOptions: {
+    useUTC: false,
+  }, */
+  timezone: "America/Santiago",
 });
 
 module.exports = sequelize;
