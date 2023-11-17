@@ -1,12 +1,12 @@
-const { DataTypes, Model } = require("sequelize");
+const { DataTypes, Model, Deferrable } = require("sequelize");
 const sequelize = require("../utils/dbConn");
+const Role = require("./roleModel");
 const { hashPassword, checkPassword } = require("../utils/hash");
 const crypto = require("crypto");
-const { log } = require("console");
 //const validator = require("validator");
 
-const adminRole = "admin";
-const userRole = "user";
+//const adminRole = "admin";
+//const userRole = "user";
 
 class User extends Model {
   async validatePassword(password) {
@@ -57,9 +57,13 @@ User.init(
     name: DataTypes.STRING,
     lastName: DataTypes.STRING,
     role: {
-      type: DataTypes.ENUM,
-      values: [adminRole, userRole],
-      defaultValue: userRole,
+      type: DataTypes.INTEGER,
+      references: {
+        model: Role,
+        key: "id",
+        deferrable: Deferrable.INITIALLY_IMMEDIATE,
+      },
+      defaultValue: 1,
     },
     passwordResetToken: {
       type: DataTypes.STRING,
@@ -87,8 +91,12 @@ User.init(
       },
     },
     sequelize,
-    modelName: "User",
   }
 );
 
+// associations
+//User.belongsTo(Role, {foreignKey});
+//Role.hasMany(User);
+
+// exports
 module.exports = User;
