@@ -96,8 +96,15 @@ User.init(
 );
 
 // associations
-Role.hasMany(User, { foreignKey: 'role', defaultValue: 1 });
-User.belongsTo(Role, { foreignKey: 'role' });
+const associationOptions = {
+  foreignKey: {
+    name: 'role',
+    allowNull: false,
+    defaultValue: 1,
+  },
+};
+Role.hasMany(User, associationOptions);
+User.belongsTo(Role, associationOptions);
 
 // exports
 module.exports = User;
