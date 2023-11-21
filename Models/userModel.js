@@ -1,8 +1,8 @@
-const { DataTypes, Model, Deferrable } = require("sequelize");
-const sequelize = require("../utils/dbConn");
-const Role = require("./roleModel");
-const { hashPassword, checkPassword } = require("../utils/hash");
-const crypto = require("crypto");
+const { DataTypes, Model, Deferrable } = require('sequelize');
+const sequelize = require('../utils/dbConn');
+const Role = require('./roleModel');
+const { hashPassword, checkPassword } = require('../utils/hash');
+const crypto = require('crypto');
 //const validator = require("validator");
 
 //const adminRole = "admin";
@@ -23,7 +23,7 @@ class User extends Model {
   }
 
   createResetPasswordToken() {
-    const resetToken = crypto.randomBytes(32).toString("hex");
+    const resetToken = crypto.randomBytes(32).toString('hex');
     return resetToken;
   }
 }
@@ -78,11 +78,11 @@ User.init(
   },
   {
     hooks: {
-      beforeCreate: async (user) => {
+      beforeCreate: async user => {
         user.password = await hashPassword(user.password);
       },
-      beforeUpdate: async (user) => {
-        if (user.changed("password")) {
+      beforeUpdate: async user => {
+        if (user.changed('password')) {
           user.password = await hashPassword(user.password);
           user.passwordChangedAt = Date.now();
           user.passwordResetToken = null;
@@ -95,8 +95,8 @@ User.init(
 );
 
 // associations
-Role.hasMany(User, { foreignKey: "role", defaultValue });
-User.belongsTo(Role, { foreignKey: "role" });
+Role.hasMany(User, { foreignKey: 'role', defaultValue: 1 });
+User.belongsTo(Role, { foreignKey: 'role' });
 
 // exports
 module.exports = User;
