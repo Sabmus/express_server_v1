@@ -1,6 +1,5 @@
 const express = require('express');
 const morgan = require('morgan');
-const moviesRouter = require('./Routes/moviesRoutes');
 const authRouter = require('./Routes/authRoutes');
 const globalErrorHandler = require('./Controllers/errorController');
 const CustomError = require('./utils/CustomError');
@@ -23,7 +22,6 @@ const reqAtMiddleware = (req, res, next) => {
 app.use(reqAtMiddleware); // we don't call this function because it's already a middleware function
 
 // routes
-app.use(constants.movie_api, moviesRouter);
 app.use(constants.user_api, authRouter);
 
 // default route
@@ -36,10 +34,7 @@ app.all('*', (req, res, next) => {
   err.status = "fail";
   err.statusCode = 404;
  */
-  const err = new CustomError(
-    404,
-    `can't find ${req.originalUrl} on the server`
-  );
+  const err = new CustomError(404, `can't find ${req.originalUrl} on the server`);
   next(err); //skip al middleware stack and goes directly to the global error middleware
 });
 

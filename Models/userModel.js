@@ -91,6 +91,7 @@ User.init(
       },
     },
     sequelize,
+    paranoid: true,
   }
 );
 
