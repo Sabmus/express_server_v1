@@ -5,9 +5,6 @@ const { hashPassword, checkPassword } = require('../utils/hash');
 const crypto = require('crypto');
 //const validator = require("validator");
 
-//const adminRole = "admin";
-//const userRole = "user";
-
 class User extends Model {
   async validatePassword(password) {
     console.log(password, this.password);

@@ -23,31 +23,31 @@ const prodErrors = (res, error) => {
   }
 };
 
-const castErrorHandler = (error) => {
+const castErrorHandler = error => {
   const message = `error - cast for '${error.path}' of type (${error.kind}) fail for value '${error.value}' of type ${error.valueType}`;
   return new CustomError(400, message);
 };
 
-const duplicateKeyErrorHandler = (error) => {
+const duplicateKeyErrorHandler = error => {
   const message = `error - there is already a movie with the name: '${error.keyValue.name}'`;
   return new CustomError(400, message);
 };
 
-const validationErrorHandler = (error) => {
+const validationErrorHandler = error => {
   const errorMessages = Object.values(error.errors)
-    .map((val) => val.message)
+    .map(val => val.message)
     .join('. ');
 
   const message = `errors: ${errorMessages}`;
   return new CustomError(400, message);
 };
 
-const expiredJWTErrorHandler = (error) => {
+const expiredJWTErrorHandler = error => {
   const message = 'you must login again in order to access.';
   return new CustomError(401, message);
 };
 
-const JWTErrorHandler = (error) => {
+const JWTErrorHandler = error => {
   const message = 'you must login again in order to access.';
   return new CustomError(401, message);
 };
