@@ -1,13 +1,14 @@
 const { DataTypes, Model, Deferrable } = require('sequelize');
 const sequelize = require('../utils/dbConn');
 const Role = require('./roleModel');
+const Category = require('./categoryModel');
+const Account = require('./accountModel');
 const { hashPassword, checkPassword } = require('../utils/hash');
 const crypto = require('crypto');
 //const validator = require("validator");
 
 class User extends Model {
   async validatePassword(password) {
-    console.log(password, this.password);
     return await checkPassword(password, this.password);
   }
 
@@ -53,15 +54,6 @@ User.init(
     },
     name: DataTypes.STRING,
     lastName: DataTypes.STRING,
-    /* role: {
-      type: DataTypes.INTEGER,
-      references: {
-        model: Role,
-        key: "id",
-        deferrable: Deferrable.INITIALLY_IMMEDIATE,
-      },
-      defaultValue: 1,
-    }, */
     passwordResetToken: {
       type: DataTypes.STRING,
       allowNull: true,
@@ -102,6 +94,20 @@ const associationOptions = {
 };
 Role.hasMany(User, associationOptions);
 User.belongsTo(Role, associationOptions);
+
+User.hasMany(Account, {
+  foreignKey: {
+    allowNull: false,
+  },
+});
+Account.belongsTo(User);
+
+User.hasMany(Category, {
+  foreignKey: {
+    allowNull: false,
+  },
+});
+Category.belongsTo(User);
 
 // exports
 module.exports = User;

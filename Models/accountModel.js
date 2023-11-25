@@ -1,6 +1,5 @@
 const { DataTypes, Model } = require('sequelize');
 const sequelize = require('../utils/dbConn');
-const User = require('./userModel');
 
 const accountType = ['Debit', 'Credit', 'Cash'];
 
@@ -22,9 +21,13 @@ Account.init(
       allowNull: false,
     },
     billingPeriod: {
-      type: DataTypes.DATEONLY,
+      type: DataTypes.INTEGER,
       allowNull: true,
       defaultValue: null,
+      validate: {
+        min: 1,
+        max: 31,
+      },
     },
     active: {
       type: DataTypes.BOOLEAN,
@@ -35,13 +38,5 @@ Account.init(
     sequelize,
   }
 );
-
-// associations
-User.hasMany(Account);
-Account.belongsTo(User, {
-  primaryKey: {
-    allowNull: false,
-  },
-});
 
 module.exports = Account;
