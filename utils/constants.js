@@ -1,2 +1,2 @@
-exports.movie_api = '/api/v1/movies';
-exports.user_api = '/api/v1/users';
+exports.transactionApi = '/api/v1/transaction';
+exports.userApi = '/api/v1/users';

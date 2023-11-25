@@ -2,6 +2,7 @@ const { DataTypes, Model } = require('sequelize');
 const sequelize = require('../utils/dbConn');
 const User = require('./userModel');
 const Account = require('./accountModel');
+const Category = require('./categoryModel');
 
 class Transaction extends Model {}
 Transaction.init(
@@ -39,14 +40,21 @@ Transaction.init(
 // associations
 User.hasMany(Transaction);
 Transaction.belongsTo(User, {
-  primaryKey: {
+  foreignKey: {
     allowNull: false,
   },
 });
 
 Account.hasMany(Transaction);
 Transaction.belongsTo(Account, {
-  primaryKey: {
+  foreignKey: {
+    allowNull: false,
+  },
+});
+
+Category.hasMany(Transaction);
+Transaction.belongsTo(Category, {
+  foreignKey: {
     allowNull: false,
   },
 });
