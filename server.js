@@ -1,5 +1,6 @@
 const sequelize = require('./utils/dbConn');
 const Transaction = require('./Models/transactionModel');
+const Role = require('./Models/roleModel');
 const dotenv = require('dotenv');
 dotenv.config({ path: '.env' });
 
@@ -18,6 +19,9 @@ const startDB = async () => {
   try {
     await sequelize.authenticate();
     await sequelize.sync({ force: true });
+    await Role.create({
+      name: 'Usuario',
+    });
     console.log('\n\nConnection has been established successfully.\n\n');
   } catch (error) {
     console.log('\n\nUnable to connect to the database: ', error.message);
