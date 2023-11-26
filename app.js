@@ -2,6 +2,8 @@ const express = require('express');
 const morgan = require('morgan');
 const authRouter = require('./Routes/authRoutes');
 const transactionRouter = require('./Routes/transactionRoutes');
+const accountRouter = require('./Routes/accountRoutes');
+const categoryRouter = require('./Routes/categoryRoutes');
 const globalErrorHandler = require('./Controllers/errorController');
 const CustomError = require('./utils/CustomError');
 const constants = require('./utils/constants');
@@ -24,6 +26,8 @@ app.use(reqAtMiddleware); // we don't call this function because it's already a 
 
 // routes
 app.use(constants.userApi, authRouter);
+app.use(constants.userApi, accountRouter);
+app.use(constants.userApi, categoryRouter);
 app.use(constants.transactionApi, transactionRouter);
 
 // default route
