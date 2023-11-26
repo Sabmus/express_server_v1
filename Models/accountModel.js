@@ -29,13 +29,10 @@ Account.init(
         max: 31,
       },
     },
-    active: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: true,
-    },
   },
   {
     sequelize,
+    paranoid: true,
   }
 );
 
