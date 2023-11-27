@@ -37,7 +37,22 @@ const createAccount = asyncErrorHandler(async (req, res, next) => {
   });
 });
 
+const deleteAccount = asyncErrorHandler(async (req, res, next) => {
+  const accountToDelete = await req.user.getAccounts({
+    where: {
+      id: +req.params.id,
+    },
+  });
+  console.log(accountToDelete[0]);
+  await req.user.removeAccount(accountToDelete[0]);
+
+  res.status(204).json({
+    status: 'success',
+  });
+});
+
 module.exports = {
   createAccount,
   getAccount,
+  deleteAccount,
 };
