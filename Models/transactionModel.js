@@ -31,9 +31,14 @@ Transaction.init(
       type: DataTypes.FLOAT,
       allowNull: true,
     },
+    notes: {
+      type: DataTypes.TEXT,
+      defaultValue: null,
+    },
   },
   {
     sequelize,
+    paranoid: true,
   }
 );
 
