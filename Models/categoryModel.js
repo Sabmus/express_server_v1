@@ -16,6 +16,7 @@ Category.init(
   },
   {
     sequelize,
+    paranoid: true,
   }
 );
 
