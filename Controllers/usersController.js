@@ -121,7 +121,7 @@ const forgotPassword = async (req, res, next) => {
     user.passwordResetTokenExpires = Date.now() + 10 * 60 * 1000;
     await user.save();
 
-    const resetUrl = `${req.protocol}://${req.get('host')}/${constants.user_api}/reset-password/${resetToken}`;
+    const resetUrl = `${req.protocol}://${req.get('host')}/${constants.userApi}/reset-password/${resetToken}`;
 
     const message = `please use the link below to reset your password\n\n${resetUrl}\n\nThis link will be valid for 10 minutes.`;
 
