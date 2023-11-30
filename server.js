@@ -18,6 +18,15 @@ console.log(`currently in: ${app.get('env')} environment`);
 const startDB = async () => {
   try {
     await sequelize.authenticate();
+    // permanent hook that validates updates to not be able to change UserIds
+    sequelize.addHook('beforeSave', model => {
+      if (model.UserId) {
+        if (model.changed('UserId') && !model.isNewRecord) {
+          model.UserId = model.previous('UserId');
+        }
+      }
+    });
+
     await sequelize.sync({ force: true });
     await Role.create({
       name: 'Usuario',

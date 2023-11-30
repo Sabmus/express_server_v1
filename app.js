@@ -28,7 +28,7 @@ app.use(reqAtMiddleware); // we don't call this function because it's already a 
 app.use(constants.userApi, authRouter);
 app.use(constants.userApi, accountRouter);
 app.use(constants.userApi, categoryRouter);
-app.use(constants.transactionApi, transactionRouter);
+app.use(constants.userApi, transactionRouter);
 
 // default route
 app.all('*', (req, res, next) => {
