@@ -43,12 +43,12 @@ Transaction.init(
 );
 
 // associations
-User.hasMany(Transaction);
-Transaction.belongsTo(User, {
+User.hasMany(Transaction, {
   foreignKey: {
     allowNull: false,
   },
 });
+Transaction.belongsTo(User);
 
 Account.hasMany(Transaction);
 Transaction.belongsTo(Account, {
