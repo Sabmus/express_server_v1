@@ -17,19 +17,22 @@ const getAccount = asyncErrorHandler(async (req, res, next) => {
 });
 
 const createAccount = asyncErrorHandler(async (req, res, next) => {
-  // 1- check if fields are present in req.body
   const { name, type, billingPeriod } = req.body;
-  // 2- check if account name already exists for the user
+
+  // get account lists
   const accountList = await req.user.getAccounts({
     attributes: ['name'],
     raw: true,
   });
-  if (accountList.find(item => item.name === req.body.name)) {
+
+  // 1 - check if account name already exists for the user
+  if (accountList.find(item => item.name === name)) {
     const error = new CustomError(400, 'account name already exists.');
     return next(error);
   }
 
-  const newAccount = await Account.create(req.body);
+  // create account
+  const newAccount = await Account.create({ name, type, billingPeriod, UserId: req.user.id });
 
   res.status(200).json({
     status: 'success',
@@ -40,8 +43,9 @@ const createAccount = asyncErrorHandler(async (req, res, next) => {
 });
 
 const updateAccount = asyncErrorHandler(async (req, res, next) => {
+  let { name, type, billingPeriod } = req.body;
+
   // 1- check if body has fields to update
-  const { name, type, billingPeriod } = req.body;
   if (!name && !type && !billingPeriod) {
     const error = new CustomError(400, 'must provide a field to update');
     return next(error);
@@ -49,9 +53,10 @@ const updateAccount = asyncErrorHandler(async (req, res, next) => {
 
   // 2- check if billingPeriod is present, if so, cast to integer
   if (billingPeriod) {
-    req.body.billingPeriod = +req.body.billingPeriod;
+    billingPeriod = +billingPeriod;
   }
 
+  // get account to update
   const accountForUpdate = (
     await req.user.getAccounts({
       where: {
@@ -60,7 +65,14 @@ const updateAccount = asyncErrorHandler(async (req, res, next) => {
     })
   )[0];
 
-  await accountForUpdate.update(req.body);
+  // validate that the account exists
+  if (!accountForUpdate) {
+    const error = new CustomError(400, 'there is no account to update.');
+    return next(error);
+  }
+
+  // update account
+  await accountForUpdate.update({ name, type, billingPeriod });
 
   res.status(200).json({
     status: 'success',
@@ -71,6 +83,7 @@ const updateAccount = asyncErrorHandler(async (req, res, next) => {
 });
 
 const deleteAccount = asyncErrorHandler(async (req, res, next) => {
+  // get the account to eliminate
   const accountToDelete = (
     await req.user.getAccounts({
       where: {
@@ -79,6 +92,13 @@ const deleteAccount = asyncErrorHandler(async (req, res, next) => {
     })
   )[0];
 
+  // check if account exists
+  if (!accountToDelete) {
+    const error = new CustomError(400, 'no account to delete.');
+    return next(error);
+  }
+
+  // delete account
   await accountToDelete.destroy();
 
   res.status(204).json({

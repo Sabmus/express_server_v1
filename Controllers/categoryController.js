@@ -17,18 +17,20 @@ const getCategory = asyncErrorHandler(async (req, res, next) => {
 });
 
 const createCategory = asyncErrorHandler(async (req, res, next) => {
-  // 1- check if category name already exists for the user
+  const name = req.body.name;
+
   const categoryList = await req.user.getCategories({
     attributes: ['name'],
     raw: true,
   });
 
+  // 1- check if category name already exists for the user
   if (categoryList.find(item => item.name === req.body.name)) {
     const error = new CustomError(400, 'category name already exists.');
     return next(error);
   }
 
-  const newCategory = await Category.create(req.body);
+  const newCategory = await Category.create({ name, UserId: req.user.id });
 
   res.status(200).json({
     status: 'success',
@@ -39,11 +41,14 @@ const createCategory = asyncErrorHandler(async (req, res, next) => {
 });
 
 const updateCategory = asyncErrorHandler(async (req, res, next) => {
-  if (!req.body.name) {
-    const error = new CustomError(400, 'you must provide a name');
+  const name = req.body.name;
+
+  if (!name) {
+    const error = new CustomError(400, 'you must provide a name.');
     return next(error);
   }
 
+  // get category to update
   const categoryForUpdate = (
     await req.user.getCategories({
       where: {
@@ -52,9 +57,14 @@ const updateCategory = asyncErrorHandler(async (req, res, next) => {
     })
   )[0];
 
-  console.log(categoryForUpdate);
+  // check if category exists
+  if (!categoryForUpdate) {
+    const error = new CustomError(400, 'there is no category to update.');
+    return next(error);
+  }
 
-  await categoryForUpdate.update({ name: req.body.name });
+  // update the category
+  await categoryForUpdate.update({ name });
 
   res.status(200).json({
     status: 'success',
@@ -65,6 +75,7 @@ const updateCategory = asyncErrorHandler(async (req, res, next) => {
 });
 
 const deleteCategory = asyncErrorHandler(async (req, res, next) => {
+  // get category to delete
   const categoryToDelete = (
     await req.user.getCategories({
       where: {
@@ -73,6 +84,12 @@ const deleteCategory = asyncErrorHandler(async (req, res, next) => {
     })
   )[0];
 
+  if (!categoryToDelete) {
+    const error = new CustomError(400, 'there is no category to delete.');
+    return next(error);
+  }
+
+  // delete category
   await categoryToDelete.destroy();
 
   res.status(204).json({
