@@ -17,7 +17,9 @@ const getAccount = asyncErrorHandler(async (req, res, next) => {
 });
 
 const createAccount = asyncErrorHandler(async (req, res, next) => {
-  // 1- check if account name already exists for the user
+  // 1- check if fields are present in req.body
+  const { name, type, billingPeriod } = req.body;
+  // 2- check if account name already exists for the user
   const accountList = await req.user.getAccounts({
     attributes: ['name'],
     raw: true,
