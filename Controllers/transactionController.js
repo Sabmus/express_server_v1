@@ -1,9 +1,14 @@
 const asyncErrorHandler = require('../utils/asyncErrorHandler');
 const CustomError = require('../utils/CustomError');
 const Transaction = require('../Models/transactionModel');
+const Account = require('../Models/accountModel');
+const Category = require('../Models/categoryModel');
 
 const getTransaction = asyncErrorHandler(async (req, res, next) => {
-  const transactions = await req.user.getTransactions();
+  const transactions = await req.user.getTransactions({
+    attributes: ['amount', 'hasInstalment', 'instalmentQuantity', 'instalmentAmount', 'notes'],
+    include: [Account, Category],
+  });
 
   res.status(200).json({
     status: 'success',
@@ -14,11 +19,19 @@ const getTransaction = asyncErrorHandler(async (req, res, next) => {
 });
 
 const createTransaction = asyncErrorHandler(async (req, res, next) => {
+  const user = req.user;
+
   const { amount, hasInstalment, instalmentQuantity, instalmentAmount, notes, accountId, categoryId } = req.body;
 
-  // check if user has the account and the category
-  if (!req.user.account.includes(accountId) || !req.user.category.includes(categoryId)) {
-    const error = new CustomError(400, 'account or category does not exists');
+  // check if user has the account
+  if (user.Accounts.find(item => item.id !== accountId)) {
+    const error = new CustomError(400, 'account does not exists.');
+    return next(error);
+  }
+
+  // check if user has the category
+  if (user.Categories.find(item => item.id !== categoryId)) {
+    const error = new CustomError(400, 'category does not exists.');
     return next(error);
   }
 
