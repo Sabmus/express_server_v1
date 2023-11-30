@@ -32,6 +32,8 @@ User.init(
       autoIncrement: true,
       primaryKey: true,
     },
+    name: DataTypes.STRING,
+    lastName: DataTypes.STRING,
     email: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -52,8 +54,6 @@ User.init(
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
     },
-    name: DataTypes.STRING,
-    lastName: DataTypes.STRING,
     passwordResetToken: {
       type: DataTypes.STRING,
       allowNull: true,

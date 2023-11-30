@@ -15,7 +15,9 @@ const signToken = id => {
 };
 
 const signup = asyncErrorHandler(async (req, res, next) => {
-  const newUser = await User.create(req.body);
+  const { name, lastName, email, password } = req.body;
+
+  const newUser = await User.create({ name, lastName, email, password });
   const token = signToken(newUser.email);
 
   res.status(201).json({
