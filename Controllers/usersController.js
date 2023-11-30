@@ -1,5 +1,7 @@
 const { Op } = require('sequelize');
 const User = require('../Models/userModel');
+const Account = require('../Models/accountModel');
+const Category = require('../Models/categoryModel');
 const asyncErrorHandler = require('../utils/asyncErrorHandler');
 const jwt = require('jsonwebtoken');
 const CustomError = require('../utils/CustomError');
@@ -18,11 +20,10 @@ const signup = asyncErrorHandler(async (req, res, next) => {
   const { name, lastName, email, password } = req.body;
 
   const newUser = await User.create({ name, lastName, email, password });
-  const token = signToken(newUser.email);
+  //const token = signToken(newUser.email);
 
   res.status(201).json({
     status: 'success',
-    token,
     data: {
       user: newUser,
     },
@@ -79,7 +80,7 @@ const protect = asyncErrorHandler(async (req, res, next) => {
   const payload = await util.promisify(jwt.verify)(token, process.env.JWT_SECRET);
 
   // 3. check if user exists
-  const user = await User.findOne({ where: { email: payload.id }, includes: [Account, Category] });
+  const user = await User.findOne({ where: { email: payload.id }, include: [Account, Category] });
 
   if (!user) {
     const error = new CustomError(401, 'you must log in to see this.');
