@@ -1,22 +1,10 @@
-const { DataTypes, Model } = require('sequelize');
-const sequelize = require('../utils/dbConn');
-const Role = require('./roleModel');
-const Category = require('./categoryModel');
-const Account = require('./accountModel');
+const { Model } = require('sequelize');
 const { hashPassword, checkPassword } = require('../utils/hash');
+const fkRules = require('./shared/foreignKeyRules');
 const crypto = require('crypto');
 //const validator = require("validator");
 
-// associations
-const associationOptions = {
-  foreignKey: {
-    name: 'role',
-    allowNull: false,
-    defaultValue: 1,
-  },
-};
-
-const UserSchema = () => {
+module.exports = (sequelize, DataTypes) => {
   class User extends Model {
     async validatePassword(password) {
       return await checkPassword(password, this.password);
@@ -35,23 +23,17 @@ const UserSchema = () => {
       return resetToken;
     }
 
-    static associate() {
-      Role.hasMany(User, associationOptions);
-      User.belongsTo(Role, associationOptions);
-
-      User.hasMany(Account, {
+    static associate(models) {
+      this.belongsTo(models.Role, {
         foreignKey: {
+          name: 'role',
           allowNull: false,
+          defaultValue: 1,
         },
       });
-      Account.belongsTo(User);
-
-      User.hasMany(Category, {
-        foreignKey: {
-          allowNull: false,
-        },
-      });
-      Category.belongsTo(User);
+      this.hasMany(models.Account, fkRules.notNull);
+      this.hasMany(models.Category, fkRules.notNull);
+      this.hasMany(models.Transaction, fkRules.notNull);
     }
   }
   User.init(
@@ -109,11 +91,8 @@ const UserSchema = () => {
         },
       },
       sequelize,
-      paranoid: true,
+      //paranoid: true,
     }
   );
   return User;
 };
-
-// exports
-module.exports = UserSchema;

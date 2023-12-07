@@ -1,23 +1,28 @@
-const { DataTypes, Model } = require('sequelize');
-const sequelize = require('../utils/dbConn');
+const { Model } = require('sequelize');
 
-class Category extends Model {}
-Category.init(
-  {
-    id: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
-      primaryKey: true,
-    },
-    name: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-  },
-  {
-    sequelize,
-    paranoid: true,
+module.exports = (sequelize, DataTypes) => {
+  class Category extends Model {
+    static associate(models) {
+      this.belongsTo(models.User);
+      this.hasMany(models.Transaction);
+    }
   }
-);
-
-module.exports = Category;
+  Category.init(
+    {
+      id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true,
+      },
+      name: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+    },
+    {
+      sequelize,
+      paranoid: true,
+    }
+  );
+  return Category;
+};

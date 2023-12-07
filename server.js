@@ -1,6 +1,6 @@
 const sequelize = require('./utils/dbConn');
-const Transaction = require('./Models/transactionModel');
-const Role = require('./Models/roleModel');
+//const Transaction = require('./Models/transactionModel');
+//const Role = require('./Models/roleModel');
 const dotenv = require('dotenv');
 dotenv.config({ path: '.env' });
 
@@ -40,7 +40,7 @@ const startDB = async () => {
 const port = process.env.PORT || 3000;
 
 const server = app.listen(port, async () => {
-  await startDB();
+  //await startDB();
   console.log(process.env.TZ);
   console.log('server running!!');
 });
