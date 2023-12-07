@@ -1,0 +1,89 @@
+// Use DBML to define your database structure
+// Docs: https://dbml.dbdiagram.io/docs
+// url: https://dbdocs.io/sabmus8/PersonalFinance?view=relationships
+
+enum account_types {
+  "debit"
+  "credit"
+  "cash"
+}
+
+Table users {
+  id int [pk, increment]
+  email varchar [unique, not null]
+  username varchar(64) [unique]
+  name varchar
+  lastname varchar
+  password varchar [not null]
+  isAdmin boolean [default: false]
+  emailVerified boolean [default: false]
+  created_at int [not null, default: "current_timestamp"]
+  updated_at int
+  deleted_at int
+}
+
+Table confirmation_token {
+  id int [pk, increment]
+  user_id int [not null]
+  token varchar [not null]
+  status varchar [default: "pending"]
+  valid_until int [not null]
+  confirmation_date int
+  created_at int [not null, default: "current_timestamp"]
+  updated_at int
+  deleted_at int
+}
+
+Table password_reset {
+  id int [pk, increment]
+  user_id int [not null]
+  password_reset_token varchar [default: null]
+  password_reset_token_expires int [default: null]
+  created_at int [not null, default: "current_timestamp"]
+  updated_at int
+  deleted_at int
+}
+
+Table transactions {
+  id int [pk, increment]
+  user_id int [not null]
+  account_id int [not null]
+  category_id int [not null]
+  amount float [not null]
+  has_instalment boolean [default: false]
+  instalment_quantity int [default: null]
+  instalment_amount float [default: null]
+  notes text [default: null]
+  created_at int [not null, default: "current_timestamp"]
+  updated_at int
+  deleted_at int
+}
+
+Table accounts {
+  id int [pk, increment]
+  user_id int [not null]
+  name varchar
+  type account_types
+  billingPeriod int [default: null]
+  created_at int [not null, default: "current_timestamp"]
+  updated_at int
+  deleted_at int
+}
+
+Table categories {
+  id int [pk, increment]
+  user_id int [not null]
+  name varchar
+  created_at int [not null, default: "current_timestamp"]
+  updated_at int
+  deleted_at int
+}
+
+
+Ref: users.id - confirmation_token.user_id
+Ref: users.id - password_reset.user_id
+Ref: transactions.user_id > users.id
+Ref: transactions.account_id > accounts.id
+Ref: transactions.category_id > categories.id
+Ref: users.id < accounts.user_id
+Ref: users.id < categories.user_id
