@@ -1,14 +1,17 @@
 -- CreateEnum
 CREATE TYPE "AccountTypes" AS ENUM ('Debit', 'Credit', 'Cash');
 
+-- CreateEnum
+CREATE TYPE "ConfirmationTokenStatus" AS ENUM ('pending', 'success', 'failed');
+
 -- CreateTable
 CREATE TABLE "User" (
-    "id" TEXT NOT NULL,
-    "email" TEXT NOT NULL,
-    "username" VARCHAR(64) NOT NULL,
-    "name" TEXT,
-    "lastname" TEXT,
-    "password" TEXT NOT NULL,
+    "id" VARCHAR NOT NULL,
+    "email" VARCHAR NOT NULL,
+    "username" VARCHAR(64),
+    "name" VARCHAR NOT NULL,
+    "lastName" VARCHAR NOT NULL,
+    "password" VARCHAR NOT NULL,
     "isAdmin" BOOLEAN NOT NULL DEFAULT false,
     "emailVerified" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -20,10 +23,10 @@ CREATE TABLE "User" (
 
 -- CreateTable
 CREATE TABLE "ConfirmationToken" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "token" TEXT NOT NULL,
-    "status" TEXT NOT NULL DEFAULT 'pending',
+    "id" VARCHAR NOT NULL,
+    "userId" VARCHAR NOT NULL,
+    "token" VARCHAR NOT NULL,
+    "status" "ConfirmationTokenStatus" NOT NULL DEFAULT 'pending',
     "validUntil" TIMESTAMP(3) NOT NULL,
     "confirmationDate" TIMESTAMP(3) NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -35,9 +38,9 @@ CREATE TABLE "ConfirmationToken" (
 
 -- CreateTable
 CREATE TABLE "PasswordReset" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "passwordResetToken" TEXT,
+    "id" VARCHAR NOT NULL,
+    "userId" VARCHAR NOT NULL,
+    "passwordResetToken" VARCHAR,
     "passwordResetTokenExpires" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3),
@@ -48,9 +51,9 @@ CREATE TABLE "PasswordReset" (
 
 -- CreateTable
 CREATE TABLE "Account" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
+    "id" VARCHAR NOT NULL,
+    "userId" VARCHAR NOT NULL,
+    "name" VARCHAR NOT NULL,
     "type" "AccountTypes" NOT NULL DEFAULT 'Debit',
     "billingPeriod" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -62,9 +65,9 @@ CREATE TABLE "Account" (
 
 -- CreateTable
 CREATE TABLE "Category" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
+    "id" VARCHAR NOT NULL,
+    "userId" VARCHAR NOT NULL,
+    "name" VARCHAR NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3),
     "deletedAt" TIMESTAMP(3),
@@ -74,15 +77,15 @@ CREATE TABLE "Category" (
 
 -- CreateTable
 CREATE TABLE "Transaction" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "categoryId" TEXT NOT NULL,
-    "accountId" TEXT NOT NULL,
+    "id" VARCHAR NOT NULL,
+    "userId" VARCHAR NOT NULL,
+    "categoryId" VARCHAR NOT NULL,
+    "accountId" VARCHAR NOT NULL,
     "amount" DOUBLE PRECISION NOT NULL,
     "hasInstalment" BOOLEAN NOT NULL DEFAULT false,
     "instalmentQuantity" INTEGER,
     "instalmentAmount" DOUBLE PRECISION,
-    "notes" TEXT,
+    "notes" VARCHAR,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3),
     "deletedAt" TIMESTAMP(3),
