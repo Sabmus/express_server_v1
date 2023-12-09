@@ -12,14 +12,9 @@ process.on('uncaughtException', err => {
 const app = require('./app');
 console.log(`currently in: ${app.get('env')} environment`);
 
-const startDB = async () => {
-  console.log('emmpty func');
-};
-
 const port = process.env.PORT || 3000;
 
 const server = app.listen(port, async () => {
-  //await startDB();
   console.log(process.env.TZ);
   console.log('server running!!');
 });
