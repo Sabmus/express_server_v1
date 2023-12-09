@@ -2,7 +2,7 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "postgresql"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -17,13 +17,19 @@ enum AccountTypes {
   Cash
 }
 
+enum ConfirmationTokenStatus {
+  pending
+  success
+  failed
+}
+
 // user model
 model User {
   id                String             @id @default(uuid()) @db.VarChar()
   email             String             @unique @db.VarChar()
-  username          String             @unique @db.VarChar(64)
-  name              String?            @db.VarChar()
-  lastname          String?            @db.VarChar()
+  username          String?            @unique @db.VarChar(64)
+  name              String             @db.VarChar()
+  lastName          String             @db.VarChar()
   password          String             @db.VarChar()
   isAdmin           Boolean            @default(false)
   emailVerified     Boolean            @default(false)
@@ -38,15 +44,15 @@ model User {
 }
 
 model ConfirmationToken {
-  id               String    @id @default(uuid()) @db.VarChar()
-  user             User      @relation(fields: [userId], references: [id])
-  userId           String    @unique @db.VarChar()
-  token            String    @db.VarChar()
-  status           String    @default("pending") @db.VarChar()
+  id               String                  @id @default(uuid()) @db.VarChar()
+  user             User                    @relation(fields: [userId], references: [id])
+  userId           String                  @unique @db.VarChar()
+  token            String                  @db.VarChar()
+  status           ConfirmationTokenStatus @default(pending)
   validUntil       DateTime
   confirmationDate DateTime
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime? @updatedAt
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime?               @updatedAt
   deletedAt        DateTime?
 }
 
