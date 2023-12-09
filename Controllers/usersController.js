@@ -141,31 +141,29 @@ const onlyAdmin = role => {
 };
 
 const forgotPassword = async (req, res, next) => {
-  const tenMinutes = 10 * 60 * 1000;
   const user = await prisma.user.findUnique({ where: { email: req.body?.email || '' } });
 
   if (user) {
-    const resetToken = await util.promisify(crypto.randomBytes)(32);
+    const resetToken = crypto.randomBytes(32).toString('hex');
     const passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
 
-    const userPasswordReset = await prisma.passwordReset.upsert({
+    const tenMinutes = 10 * 60 * 1000;
+    const expiresDate = new Date(Date.now() + tenMinutes).toISOString();
+
+    await prisma.passwordReset.upsert({
       where: {
         userId: user.id,
       },
       update: {
         passwordResetToken,
-        passwordResetTokenExpires: Date.now() + tenMinutes,
+        passwordResetTokenExpires: expiresDate,
       },
       create: {
         userId: user.id,
         passwordResetToken,
-        passwordResetTokenExpires: Date.now() + tenMinutes,
+        passwordResetTokenExpires: expiresDate,
       },
     });
-
-    //user.passwordResetToken = passwordResetToken;
-    //user.passwordResetTokenExpires = Date.now() + 10 * 60 * 1000;
-    //await user.save();
 
     const resetUrl = `${req.protocol}://${req.get('host')}/${
       constants.userApi
@@ -208,10 +206,26 @@ const resetPassword = async (req, res, next) => {
     return next(error);
   }
 
-  const user = await User.findOne({
+  const hashedPassword = await hashPassword(req.body.password);
+
+  const user = await prisma.passwordReset.update({
     where: {
       passwordResetToken: token,
-      passwordResetTokenExpires: { [Op.gte]: Date.now() },
+      passwordResetTokenExpires: { gte: new Date().toISOString() },
+    },
+    data: {
+      passwordResetToken: null,
+      passwordResetTokenExpires: null,
+      user: {
+        update: {
+          data: {
+            password: hashedPassword,
+          },
+        },
+      },
+    },
+    include: {
+      user: true,
     },
   });
 
@@ -221,12 +235,8 @@ const resetPassword = async (req, res, next) => {
     return next(error);
   }
 
-  // save password to db (it will be hashed pre save)
-  user.password = req.body.password;
-  await user.save();
-
   // log the user in
-  const jwtToken = signToken(user._id);
+  const jwtToken = signToken(user.id);
 
   res.status(200).json({
     status: 'success',

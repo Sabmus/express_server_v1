@@ -10,8 +10,8 @@
     "migrate:dev": "npx prisma migrate dev --skip-seed",
     "dev": "nodemon server.js",
     "dev-docker": "npm run generate && nodemon --legacy-watch server.js",
-    "delete-test-data": "node ./data/import_dev_data.js -d",
-    "import-test-data": "node ./data/import_dev_data.js -i"
+    "docker:dev": "docker compose up -d && docker logs -f node_container",
+    "docker:build": "docker compose up -d --build && docker logs -f node_container"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.js",
