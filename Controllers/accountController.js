@@ -1,6 +1,8 @@
 const asyncErrorHandler = require('../utils/asyncErrorHandler');
 const CustomError = require('../utils/CustomError');
-const Account = require('../Models/accountModel');
+const { PrismaClient, Prisma } = require('@prisma/client');
+
+const prisma = new PrismaClient();
 
 const getAccount = asyncErrorHandler(async (req, res, next) => {
   const accountList = await req.user.getAccounts({
@@ -20,9 +22,8 @@ const createAccount = asyncErrorHandler(async (req, res, next) => {
   const { name, type, billingPeriod } = req.body;
 
   // get account lists
-  const accountList = await req.user.getAccounts({
-    attributes: ['name'],
-    raw: true,
+  const accountList = await prisma.account.findFirst({
+    where: { name },
   });
 
   // 1 - check if account name already exists for the user

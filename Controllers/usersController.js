@@ -1,14 +1,13 @@
-const { Op } = require('sequelize');
-const User = require('../Models/userModel');
-const Account = require('../Models/accountModel');
-const Category = require('../Models/categoryModel');
 const asyncErrorHandler = require('../utils/asyncErrorHandler');
 const jwt = require('jsonwebtoken');
 const CustomError = require('../utils/CustomError');
 const util = require('util');
+const { hashPassword, checkPassword } = require('../utils/hash');
 const sendEmail = require('../utils/email');
 const constants = require('../utils/constants');
 const crypto = require('crypto');
+const prisma = require('../prisma/client');
+const validator = require('validator');
 
 const signToken = id => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -17,10 +16,35 @@ const signToken = id => {
 };
 
 const signup = asyncErrorHandler(async (req, res, next) => {
-  const { name, lastName, email, password } = req.body;
+  const { email, name, lastName, password } = req.body;
 
-  const newUser = await User.create({ name, lastName, email, password });
-  //const token = signToken(newUser.email);
+  if (!password) {
+    const error = new CustomError(400, 'password must be provided.');
+    return next(error);
+  }
+
+  if (!validator.isEmail(email)) {
+    const error = new CustomError(400, 'invalid email.');
+    return next(error);
+  }
+
+  const hashedPassword = await hashPassword(password);
+
+  const newUser = await prisma.user.create({
+    data: { email, name, lastName, password: hashedPassword },
+    select: {
+      email: true,
+      name: true,
+      lastName: true,
+      accounts: {
+        select: {
+          name: true,
+          type: true,
+          billingPeriod: true,
+        },
+      },
+    },
+  });
 
   res.status(201).json({
     status: 'success',
@@ -40,7 +64,7 @@ const login = asyncErrorHandler(async (req, res, next) => {
   }
 
   //check if user exists in db
-  const user = await User.findOne({ where: { email: email } });
+  const user = await prisma.user.findUnique({ where: { email } });
 
   if (!user) {
     const error = new CustomError(400, 'invalid email or password');
@@ -48,7 +72,7 @@ const login = asyncErrorHandler(async (req, res, next) => {
   }
 
   //check if password is correct
-  const correctPassword = await user.validatePassword(password);
+  const correctPassword = await checkPassword(password, user.password);
 
   if (!correctPassword) {
     const error = new CustomError(400, 'invalid email or password');
@@ -80,7 +104,13 @@ const protect = asyncErrorHandler(async (req, res, next) => {
   const payload = await util.promisify(jwt.verify)(token, process.env.JWT_SECRET);
 
   // 3. check if user exists
-  const user = await User.findOne({ where: { email: payload.id }, include: [Account, Category] });
+  const user = await prisma.user.findUnique({
+    where: { email: payload.id },
+    include: {
+      accounts: true,
+      categories: true,
+    },
+  });
 
   if (!user) {
     const error = new CustomError(401, 'you must log in to see this.');
@@ -88,11 +118,11 @@ const protect = asyncErrorHandler(async (req, res, next) => {
   }
 
   // 4. check if user changed password after the token was issued
-  const isPasswordChanged = user.isPasswordChanged(payload.iat);
+  /* const isPasswordChanged = user.isPasswordChanged(payload.iat);
   if (isPasswordChanged) {
     const error = new CustomError(401, 'password changed, please log in again.');
     return next(error);
-  }
+  } */
 
   // 5. allow user to access
   req.user = user;
@@ -111,17 +141,35 @@ const onlyAdmin = role => {
 };
 
 const forgotPassword = async (req, res, next) => {
-  const user = await User.findOne({ where: { email: req.body.email } });
+  const tenMinutes = 10 * 60 * 1000;
+  const user = await prisma.user.findUnique({ where: { email: req.body?.email || '' } });
 
   if (user) {
-    const resetToken = user.createResetPasswordToken();
+    const resetToken = await util.promisify(crypto.randomBytes)(32);
     const passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
 
-    user.passwordResetToken = passwordResetToken;
-    user.passwordResetTokenExpires = Date.now() + 10 * 60 * 1000;
-    await user.save();
+    const userPasswordReset = await prisma.passwordReset.upsert({
+      where: {
+        userId: user.id,
+      },
+      update: {
+        passwordResetToken,
+        passwordResetTokenExpires: Date.now() + tenMinutes,
+      },
+      create: {
+        userId: user.id,
+        passwordResetToken,
+        passwordResetTokenExpires: Date.now() + tenMinutes,
+      },
+    });
 
-    const resetUrl = `${req.protocol}://${req.get('host')}/${constants.userApi}/reset-password/${resetToken}`;
+    //user.passwordResetToken = passwordResetToken;
+    //user.passwordResetTokenExpires = Date.now() + 10 * 60 * 1000;
+    //await user.save();
+
+    const resetUrl = `${req.protocol}://${req.get('host')}/${
+      constants.userApi
+    }/reset-password/${resetToken}`;
 
     const message = `please use the link below to reset your password\n\n${resetUrl}\n\nThis link will be valid for 10 minutes.`;
 
@@ -132,7 +180,15 @@ const forgotPassword = async (req, res, next) => {
         message,
       });
     } catch (error) {
-      await user.update({ passwordResetToken: null, passwordResetTokenExpires: null });
+      await prisma.passwordReset.update({
+        where: {
+          userId: user.id,
+        },
+        data: {
+          passwordResetToken: null,
+          passwordResetTokenExpires: null,
+        },
+      });
       return next(new CustomError(500, 'there was a problem sending the password reset email'));
     }
   }
