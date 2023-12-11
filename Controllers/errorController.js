@@ -52,6 +52,11 @@ const JWTErrorHandler = error => {
   return new CustomError(401, message);
 };
 
+const confirmationTokenNotFound = error => {
+  const message = 'invalid token or expired.';
+  return new CustomError(401, message);
+};
+
 module.exports = (error, req, res, next) => {
   error.statusCode = error.statusCode || 500;
   error.status = error.status || 'error';
@@ -69,6 +74,10 @@ module.exports = (error, req, res, next) => {
     if (err.name === 'ValidationError') err = validationErrorHandler(err);
     if (err.name === 'TokenExpiredError') err = expiredJWTErrorHandler(err);
     if (err.name === 'JsonWebTokenError') err = JWTErrorHandler(err);
+
+    // prisma errors
+    if (err.code === 'P2025' && err.meta.modelName === 'ConfirmationToken')
+      err = confirmationTokenNotFound(err);
 
     prodErrors(res, err);
   }

@@ -9,6 +9,13 @@ const crypto = require('crypto');
 const prisma = require('../prisma/client');
 const validator = require('validator');
 
+const minutes = 10;
+const tenMinutes = minutes * 60 * 1000;
+
+const createTokenUrl = (req, path, token) => {
+  return `${req.protocol}://${req.get('host')}/${constants.userApi}/${path}/${token}`;
+};
+
 const signToken = id => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.EXPIRES_IN,
@@ -16,10 +23,15 @@ const signToken = id => {
 };
 
 const signup = asyncErrorHandler(async (req, res, next) => {
-  const { email, name, lastName, password } = req.body;
+  const { email, name, lastName, password, confirmPassword } = req.body;
 
-  if (!password) {
-    const error = new CustomError(400, 'password must be provided.');
+  if (!password || !confirmPassword) {
+    const error = new CustomError(400, 'password and confim password must be provided.');
+    return next(error);
+  }
+
+  if (!(password === confirmPassword)) {
+    const error = new CustomError(400, 'passwords does not match.');
     return next(error);
   }
 
@@ -28,10 +40,31 @@ const signup = asyncErrorHandler(async (req, res, next) => {
     return next(error);
   }
 
-  const hashedPassword = await hashPassword(password);
+  // create activation account email parameters
+  const confirmationToken = crypto.randomBytes(32).toString('hex');
+  const hashedConfirmationToken = crypto
+    .createHash('sha256')
+    .update(confirmationToken)
+    .digest('hex');
 
+  const resetUrl = createTokenUrl(req, 'confirm-account', confirmationToken);
+  const message = `please use the link below to activate your account\n\n${resetUrl}\n\nThis link will be valid for ${minutes} minutes.`;
+
+  // create user in db
+  const hashedPassword = await hashPassword(password);
   const newUser = await prisma.user.create({
-    data: { email, name, lastName, password: hashedPassword },
+    data: {
+      email,
+      name,
+      lastName,
+      password: hashedPassword,
+      confirmationToken: {
+        create: {
+          token: hashedConfirmationToken,
+          validUntil: new Date(Date.now() + tenMinutes).toISOString(),
+        },
+      },
+    },
     select: {
       email: true,
       name: true,
@@ -46,11 +79,43 @@ const signup = asyncErrorHandler(async (req, res, next) => {
     },
   });
 
+  // send activation email
+  await sendEmail({
+    email: newUser.email,
+    subject: 'account confirmation',
+    message,
+  });
+
   res.status(201).json({
     status: 'success',
     data: {
       user: newUser,
     },
+  });
+});
+
+const confirmAccount = asyncErrorHandler(async (req, res, next) => {
+  const token = req.params?.token || '';
+  const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+  await prisma.confirmationToken.update({
+    where: {
+      token: hashedToken,
+      validUntil: {
+        gte: new Date().toISOString(),
+      },
+    },
+    data: {
+      // prisma enum: ConfirmationTokenStatus
+      status: 'success',
+      validUntil: new Date().toISOString(),
+      confirmationDate: new Date().toISOString(),
+    },
+  });
+
+  res.status(200).json({
+    status: 'success',
+    message: 'account was succesfully confirmated.',
   });
 });
 
@@ -147,7 +212,6 @@ const forgotPassword = async (req, res, next) => {
     const resetToken = crypto.randomBytes(32).toString('hex');
     const passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
 
-    const tenMinutes = 10 * 60 * 1000;
     const expiresDate = new Date(Date.now() + tenMinutes).toISOString();
 
     await prisma.passwordReset.upsert({
@@ -165,11 +229,8 @@ const forgotPassword = async (req, res, next) => {
       },
     });
 
-    const resetUrl = `${req.protocol}://${req.get('host')}/${
-      constants.userApi
-    }/reset-password/${resetToken}`;
-
-    const message = `please use the link below to reset your password\n\n${resetUrl}\n\nThis link will be valid for 10 minutes.`;
+    const resetUrl = createTokenUrl(req, 'reset-password', resetToken);
+    const message = `please use the link below to reset your password\n\n${resetUrl}\n\nThis link will be valid for ${minutes} minutes.`;
 
     try {
       await sendEmail({
@@ -198,7 +259,8 @@ const forgotPassword = async (req, res, next) => {
 };
 
 const resetPassword = async (req, res, next) => {
-  const token = crypto.createHash('sha256').update(req.params.token).digest('hex');
+  const token = req.params?.token || '';
+  const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
   // check that password and password confirm are present in request body
   if (!req.body.password || !req.body.confirmPassword) {
@@ -210,7 +272,7 @@ const resetPassword = async (req, res, next) => {
 
   const user = await prisma.passwordReset.update({
     where: {
-      passwordResetToken: token,
+      passwordResetToken: hashedToken,
       passwordResetTokenExpires: { gte: new Date().toISOString() },
     },
     data: {
@@ -236,16 +298,17 @@ const resetPassword = async (req, res, next) => {
   }
 
   // log the user in
-  const jwtToken = signToken(user.id);
+  //const jwtToken = signToken(user.id);
 
   res.status(200).json({
     status: 'success',
-    token: jwtToken,
+    //token: jwtToken,
   });
 };
 
 module.exports = {
   signup,
+  confirmAccount,
   login,
   protect,
   onlyAdmin,
