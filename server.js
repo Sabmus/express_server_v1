@@ -1,3 +1,4 @@
+const prisma = require('./prisma/client');
 const dotenv = require('dotenv');
 dotenv.config({ path: '.env' });
 
@@ -24,7 +25,7 @@ process.on('unhandledRejection', err => {
   console.log('unhandled rejection occurred , shutting down the server...');
 
   server.close(async () => {
-    await sequelize.close();
+    await prisma.$disconnect();
     process.exit(1); //uncaught exception
   });
 });
