@@ -57,6 +57,11 @@ const confirmationTokenNotFound = error => {
   return new CustomError(401, message);
 };
 
+const userDoesNotExistInDb = error => {
+  const message = 'invalid email or password.';
+  return new CustomError(401, message);
+};
+
 module.exports = (error, req, res, next) => {
   error.statusCode = error.statusCode || 500;
   error.status = error.status || 'error';
@@ -76,8 +81,10 @@ module.exports = (error, req, res, next) => {
     if (err.name === 'JsonWebTokenError') err = JWTErrorHandler(err);
 
     // prisma errors
-    if (err.code === 'P2025' && err.meta.modelName === 'ConfirmationToken')
-      err = confirmationTokenNotFound(err);
+    if (err.code === 'P2025' && err.meta?.modelName === 'ConfirmationToken') err = confirmationTokenNotFound(err);
+
+    // custom named error
+    if (err.name === 'UserNotFound') err = userDoesNotExistInDb(err);
 
     prodErrors(res, err);
   }
