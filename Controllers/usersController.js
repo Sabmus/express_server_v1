@@ -126,11 +126,19 @@ const login = asyncErrorHandler(async (req, res, next) => {
     return next(error);
   }
 
-  //check if user exists in db
-  const user = await prisma.user.findUnique({ where: { email } });
+  //check if user exists in db and has it account confirmed
+  const user = await prisma.user.findUnique({
+    where: {
+      email,
+    },
+  });
 
   if (!user) {
-    const error = new CustomError(401, 'user not found.', ErrorNames.user.notFound);
+    const error = new CustomError(
+      401,
+      'user not found or confirmation token pending or failed',
+      ErrorNames.user.notFound
+    );
     return next(error);
   }
 
@@ -168,7 +176,9 @@ const protect = asyncErrorHandler(async (req, res, next) => {
 
   // 3. check if user exists
   const user = await prisma.user.findUnique({
-    where: { email: payload.id },
+    where: {
+      email: payload.id,
+    },
     include: {
       accounts: true,
       categories: true,
