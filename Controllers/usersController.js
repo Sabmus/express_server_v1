@@ -1,6 +1,7 @@
 const asyncErrorHandler = require('../utils/asyncErrorHandler');
 const jwt = require('jsonwebtoken');
 const CustomError = require('../utils/CustomError');
+const ErrorNames = require('../utils/customErrorNames');
 const util = require('util');
 const { hashPassword, checkPassword } = require('../utils/hash');
 const sendEmail = require('../utils/email');
@@ -13,7 +14,7 @@ const minutes = 10;
 const tenMinutes = minutes * 60 * 1000;
 
 const createTokenUrl = (req, path, token) => {
-  return `${req.protocol}://${req.get('host')}/${constants.userApi}/${path}/${token}`;
+  return `${req.protocol}://${req.get('host')}${constants.userApi}/${path}/${token}`;
 };
 
 const signToken = id => {
@@ -42,10 +43,7 @@ const signup = asyncErrorHandler(async (req, res, next) => {
 
   // create activation account email parameters
   const confirmationToken = crypto.randomBytes(32).toString('hex');
-  const hashedConfirmationToken = crypto
-    .createHash('sha256')
-    .update(confirmationToken)
-    .digest('hex');
+  const hashedConfirmationToken = crypto.createHash('sha256').update(confirmationToken).digest('hex');
 
   const resetUrl = createTokenUrl(req, 'confirm-account', confirmationToken);
   const message = `please use the link below to activate your account\n\n${resetUrl}\n\nThis link will be valid for ${minutes} minutes.`;
@@ -132,7 +130,7 @@ const login = asyncErrorHandler(async (req, res, next) => {
   const user = await prisma.user.findUnique({ where: { email } });
 
   if (!user) {
-    const error = new CustomError(400, 'invalid email or password');
+    const error = new CustomError(401, 'user not found.', ErrorNames.user.notFound);
     return next(error);
   }
 
@@ -178,7 +176,7 @@ const protect = asyncErrorHandler(async (req, res, next) => {
   });
 
   if (!user) {
-    const error = new CustomError(401, 'you must log in to see this.');
+    const error = new CustomError(401, 'you must log in to see this.', ErrorNames.user.notFound);
     return next(error);
   }
 
