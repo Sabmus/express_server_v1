@@ -11,7 +11,9 @@ const prisma = require('../prisma/client');
 const validator = require('validator');
 
 const minutes = 10;
+const hours = 24;
 const tenMinutes = minutes * 60 * 1000;
+const oneDay = hours * 60 * 60 * 1000;
 
 const createTokenUrl = (req, path, token) => {
   return `${req.protocol}://${req.get('host')}${constants.userApi}/${path}/${token}`;
@@ -59,7 +61,7 @@ const signup = asyncErrorHandler(async (req, res, next) => {
       confirmationToken: {
         create: {
           token: hashedConfirmationToken,
-          validUntil: new Date(Date.now() + tenMinutes).toISOString(),
+          validUntil: new Date(Date.now() + oneDay).toISOString(),
         },
       },
     },
@@ -179,7 +181,9 @@ const protect = asyncErrorHandler(async (req, res, next) => {
     where: {
       email: payload.id,
     },
-    include: {
+    select: {
+      id: true,
+      email: true,
       accounts: true,
       categories: true,
     },
@@ -199,6 +203,7 @@ const protect = asyncErrorHandler(async (req, res, next) => {
 
   // 5. allow user to access
   req.user = user;
+  console.log(req.user);
   next();
 });
 
