@@ -95,6 +95,7 @@ const signup = asyncErrorHandler(async (req, res, next) => {
 });
 
 const confirmAccount = asyncErrorHandler(async (req, res, next) => {
+  // TODO: change to query params, and get method
   const token = req.params?.token || '';
   const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
