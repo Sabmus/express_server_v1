@@ -6,11 +6,11 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "generate": "npx prisma generate",
+    "generate": "npx prisma generate --watch",
     "migrate:dev": "npx prisma migrate dev --skip-seed",
     "db:push": "npx prisma db push",
     "dev": "nodemon server.js",
-    "dev-docker": "npm run generate --watch && nodemon --legacy-watch server.js",
+    "dev-docker": "npm run generate && nodemon --legacy-watch server.js",
     "docker:dev": "docker compose up -d && docker logs -f node_container",
     "docker:build": "docker compose up -d --build && docker logs -f node_container"
   },
