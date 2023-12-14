@@ -96,6 +96,8 @@ const signup = asyncErrorHandler(async (req, res, next) => {
 
 const confirmAccount = asyncErrorHandler(async (req, res, next) => {
   // TODO: change to query params, and get method
+  // TODO: change confirmation flow, user may not activate his/her account in the
+  // activation window of 24 hours
   const token = req.params?.token || '';
   const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
@@ -187,6 +189,7 @@ const protect = asyncErrorHandler(async (req, res, next) => {
       email: true,
       accounts: true,
       categories: true,
+      transactions: true,
     },
   });
 
@@ -204,7 +207,6 @@ const protect = asyncErrorHandler(async (req, res, next) => {
 
   // 5. allow user to access
   req.user = user;
-  console.log(req.user);
   next();
 });
 
