@@ -52,8 +52,8 @@ const JWTErrorHandler = error => {
   return new CustomError(401, message);
 };
 
-const confirmationTokenNotFound = error => {
-  const message = 'invalid token or expired.';
+const resourceNotFound = (error, resource) => {
+  const message = `${resource} does not exists.`;
   return new CustomError(401, message);
 };
 
@@ -80,10 +80,14 @@ module.exports = (error, req, res, next) => {
     if (err.name === 'TokenExpiredError') err = expiredJWTErrorHandler(err);
     if (err.name === 'JsonWebTokenError') err = JWTErrorHandler(err);
 
-    // prisma errors
-    if (err.code === 'P2025' && err.meta?.modelName === 'ConfirmationToken') err = confirmationTokenNotFound(err);
+    /** prisma errors */
+    // not found
+    if (err.code === 'P2025' && err.meta?.modelName === 'ConfirmationToken') err = resourceNotFound(err, 'token');
+    if (err.code === 'P2025' && err.meta?.modelName === 'Account') err = resourceNotFound(err, 'account');
+    if (err.code === 'P2025' && err.meta?.modelName === 'Category') err = resourceNotFound(err, 'category');
+    if (err.code === 'P2025' && err.meta?.modelName === 'Transaction') err = resourceNotFound(err, 'transaction');
 
-    // custom named error
+    /** custom named error */
     if (err.name === 'UserNotFound') err = userDoesNotExistInDb(err);
 
     prodErrors(res, err);
