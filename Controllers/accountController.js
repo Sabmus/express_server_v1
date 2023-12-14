@@ -3,10 +3,7 @@ const CustomError = require('../utils/CustomError');
 const prisma = require('../prisma/client');
 
 const getAccount = asyncErrorHandler(async (req, res, next) => {
-  const accountList = await req.user.getAccounts({
-    attributes: ['name', 'type', 'billingPeriod'],
-    raw: true,
-  });
+  const accountList = req.user.accounts;
 
   res.status(200).json({
     status: 'success',
@@ -59,28 +56,33 @@ const updateAccount = asyncErrorHandler(async (req, res, next) => {
     return next(error);
   }
 
+  // check if name is already present in db
+  if (name) {
+    const accountList = req.user.accounts;
+
+    if (accountList.find(item => item.name === name)) {
+      const error = new CustomError(400, 'account name already exists.');
+      return next(error);
+    }
+  }
+
   // 2- check if billingPeriod is present, if so, cast to integer
   if (billingPeriod) {
-    billingPeriod = +billingPeriod;
+    billingPeriod = Number(billingPeriod);
   }
 
-  // get account to update
-  const accountForUpdate = (
-    await req.user.getAccounts({
-      where: {
-        id: +req.params.id,
-      },
-    })
-  )[0];
-
-  // validate that the account exists
-  if (!accountForUpdate) {
-    const error = new CustomError(400, 'there is no account to update.');
-    return next(error);
-  }
-
-  // update account
-  await accountForUpdate.update({ name, type, billingPeriod });
+  // update account or thrown a NotFound error
+  const accountForUpdate = await prisma.account.update({
+    where: {
+      id: req.params?.id || null,
+      userId: req.user.id,
+    },
+    data: {
+      name,
+      type,
+      billingPeriod,
+    },
+  });
 
   res.status(200).json({
     status: 'success',
@@ -92,22 +94,12 @@ const updateAccount = asyncErrorHandler(async (req, res, next) => {
 
 const deleteAccount = asyncErrorHandler(async (req, res, next) => {
   // get the account to eliminate
-  const accountToDelete = (
-    await req.user.getAccounts({
-      where: {
-        id: +req.params.id,
-      },
-    })
-  )[0];
-
-  // check if account exists
-  if (!accountToDelete) {
-    const error = new CustomError(400, 'no account to delete.');
-    return next(error);
-  }
-
-  // delete account
-  await accountToDelete.destroy();
+  await prisma.account.delete({
+    where: {
+      id: req.params?.id || null,
+      userId: req.user.id,
+    },
+  });
 
   res.status(204).json({
     status: 'success',
