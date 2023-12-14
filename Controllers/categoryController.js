@@ -1,12 +1,9 @@
 const asyncErrorHandler = require('../utils/asyncErrorHandler');
 const CustomError = require('../utils/CustomError');
-const Category = require('../Models/categoryModel');
+const prisma = require('../prisma/client');
 
 const getCategory = asyncErrorHandler(async (req, res, next) => {
-  const categoryList = await req.user.getCategories({
-    attributes: ['name'],
-    raw: true,
-  });
+  const categoryList = req.user.categories;
 
   res.status(200).json({
     status: 'success',
@@ -17,12 +14,14 @@ const getCategory = asyncErrorHandler(async (req, res, next) => {
 });
 
 const createCategory = asyncErrorHandler(async (req, res, next) => {
-  const name = req.body.name;
+  const name = req.body?.name || null;
 
-  const categoryList = await req.user.getCategories({
-    attributes: ['name'],
-    raw: true,
-  });
+  if (!name) {
+    const error = new CustomError(401, 'must provide a name for category.');
+    return next(error);
+  }
+
+  const categoryList = req.user.categories;
 
   // 1- check if category name already exists for the user
   if (categoryList.find(item => item.name === req.body.name)) {
@@ -30,7 +29,16 @@ const createCategory = asyncErrorHandler(async (req, res, next) => {
     return next(error);
   }
 
-  const newCategory = await Category.create({ name, UserId: req.user.id });
+  const newCategory = await prisma.category.create({
+    data: {
+      name,
+      user: {
+        connect: {
+          id: req.user.id,
+        },
+      },
+    },
+  });
 
   res.status(200).json({
     status: 'success',
@@ -41,30 +49,29 @@ const createCategory = asyncErrorHandler(async (req, res, next) => {
 });
 
 const updateCategory = asyncErrorHandler(async (req, res, next) => {
-  const name = req.body.name;
+  const name = req.body?.name || null;
 
   if (!name) {
     const error = new CustomError(400, 'you must provide a name.');
     return next(error);
   }
+  const categoryList = req.user.categories;
 
-  // get category to update
-  const categoryForUpdate = (
-    await req.user.getCategories({
-      where: {
-        id: +req.params.id,
-      },
-    })
-  )[0];
-
-  // check if category exists
-  if (!categoryForUpdate) {
-    const error = new CustomError(400, 'there is no category to update.');
+  if (categoryList.find(item => item.name === name)) {
+    const error = new CustomError(400, 'category name already exists.');
     return next(error);
   }
 
-  // update the category
-  await categoryForUpdate.update({ name });
+  // get category to update
+  const categoryForUpdate = await prisma.category.update({
+    where: {
+      id: req.params?.id || null,
+      userId: req.user.id,
+    },
+    data: {
+      name,
+    },
+  });
 
   res.status(200).json({
     status: 'success',
@@ -76,21 +83,12 @@ const updateCategory = asyncErrorHandler(async (req, res, next) => {
 
 const deleteCategory = asyncErrorHandler(async (req, res, next) => {
   // get category to delete
-  const categoryToDelete = (
-    await req.user.getCategories({
-      where: {
-        id: +req.params.id,
-      },
-    })
-  )[0];
-
-  if (!categoryToDelete) {
-    const error = new CustomError(400, 'there is no category to delete.');
-    return next(error);
-  }
-
-  // delete category
-  await categoryToDelete.destroy();
+  await prisma.category.delete({
+    where: {
+      id: req.params?.id || null,
+      userId: req.user.id,
+    },
+  });
 
   res.status(204).json({
     status: 'success',

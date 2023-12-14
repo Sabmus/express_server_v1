@@ -1,14 +1,9 @@
 const asyncErrorHandler = require('../utils/asyncErrorHandler');
 const CustomError = require('../utils/CustomError');
-const Transaction = require('../Models/transactionModel');
-const Account = require('../Models/accountModel');
-const Category = require('../Models/categoryModel');
+const prisma = require('../prisma/client');
 
 const getTransaction = asyncErrorHandler(async (req, res, next) => {
-  const transactions = await req.user.getTransactions({
-    attributes: ['amount', 'hasInstalment', 'instalmentQuantity', 'instalmentAmount', 'notes'],
-    include: [Account, Category],
-  });
+  const transactions = req.user.transactions;
 
   res.status(200).json({
     status: 'success',
@@ -19,32 +14,47 @@ const getTransaction = asyncErrorHandler(async (req, res, next) => {
 });
 
 const createTransaction = asyncErrorHandler(async (req, res, next) => {
-  const user = req.user;
-
   const { amount, hasInstalment, instalmentQuantity, instalmentAmount, notes, accountId, categoryId } = req.body;
 
+  const accountList = req.user.accounts;
+  const categoryList = req.user.categories;
+
   // check if user has the account
-  if (user.Accounts.find(item => item.id !== accountId)) {
+  if (!accountList.some(item => item.id === accountId)) {
     const error = new CustomError(400, 'account does not exists.');
     return next(error);
   }
 
   // check if user has the category
-  if (user.Categories.find(item => item.id !== categoryId)) {
+  if (!categoryList.some(item => item.id === categoryId)) {
     const error = new CustomError(400, 'category does not exists.');
     return next(error);
   }
 
   // create the transaction
-  const newTransaction = await Transaction.create({
-    amount,
-    hasInstalment,
-    instalmentQuantity,
-    instalmentAmount,
-    notes,
-    AccountId: accountId,
-    CategoryId: categoryId,
-    UserId: req.user.id,
+  const newTransaction = await prisma.transaction.create({
+    data: {
+      amount,
+      hasInstalment,
+      instalmentQuantity,
+      instalmentAmount,
+      notes,
+      user: {
+        connect: {
+          id: req.user.id,
+        },
+      },
+      account: {
+        connect: {
+          id: accountId,
+        },
+      },
+      category: {
+        connect: {
+          id: categoryId,
+        },
+      },
+    },
   });
 
   res.status(200).json({
@@ -56,25 +66,43 @@ const createTransaction = asyncErrorHandler(async (req, res, next) => {
 });
 
 const updateTransaction = asyncErrorHandler(async (req, res, next) => {
-  const { amount, hasInstalment, instalmentQuantity, instalmentAmount, notes } = req.body;
+  const { amount, hasInstalment, instalmentQuantity, instalmentAmount, notes, accountId, categoryId } = req.body;
 
-  // get transaction
-  const transactionForUpdate = (
-    await req.user.getTransactions({
-      where: {
-        id: +req.params.id,
-      },
-    })
-  )[0];
+  const accountList = req.user.accounts;
+  const categoryList = req.user.categories;
 
-  // check if transaction exists
-  if (!transactionForUpdate) {
-    const error = new CustomError(400, 'transaction does not exists.');
-    return next(error);
+  if (accountId) {
+    // check if user has the account
+    if (!accountList.some(item => item.id === accountId)) {
+      const error = new CustomError(400, 'account does not exists.');
+      return next(error);
+    }
+  }
+
+  if (categoryId) {
+    // check if user has the category
+    if (!categoryList.some(item => item.id === categoryId)) {
+      const error = new CustomError(400, 'category does not exists.');
+      return next(error);
+    }
   }
 
   // update transaction
-  await transactionForUpdate.update({ amount, hasInstalment, instalmentQuantity, instalmentAmount, notes });
+  const transactionForUpdate = await prisma.transaction.update({
+    where: {
+      id: req.params?.id || null,
+      userId: req.user.id,
+    },
+    data: {
+      amount,
+      hasInstalment,
+      instalmentQuantity,
+      instalmentAmount,
+      notes,
+      accountId,
+      categoryId,
+    },
+  });
 
   res.status(200).json({
     status: 'success',
@@ -86,22 +114,12 @@ const updateTransaction = asyncErrorHandler(async (req, res, next) => {
 
 const deleteTransaction = asyncErrorHandler(async (req, res, next) => {
   // get transaction
-  const transactionForDelete = (
-    await req.user.getTransactions({
-      where: {
-        id: +req.params.id,
-      },
-    })
-  )[0];
-
-  // check if transaction exists
-  if (!transactionForDelete) {
-    const error = new CustomError(400, 'transaction does not exists.');
-    return next(error);
-  }
-
-  // delete transaction
-  await transactionForDelete.destroy();
+  await prisma.transaction.delete({
+    where: {
+      id: req.params?.id || null,
+      userId: req.user.id,
+    },
+  });
 
   res.status(204).json({
     status: 'success',
